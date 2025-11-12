@@ -9,13 +9,24 @@
   "products": [],
   "umkms": [
     {
-      "name": "Apotek Sabah Balau",
-      "specialty": "Kesehatan",
-      "description": "ini apotek",
-      "phone": "08123beliau",
-      "email": "beliau@gmail.com",
-      "image": "https://www.google.com/imgres?q=apotek&imgurl=https%3A%2F%2Fapotek-k24.com%2Fimages%2Fblog%2F16777494720241023045413yunita.isnapelayanan%2520di%2520apotek%2520apa%2520saja.jpg&imgrefurl=https%3A%2F%2Ffranchisek24.com%2Fblog%2F1742%2FPelayanan-di-Apotek-Apa-Saja&docid=p9B5COKmcH1NAM&tbnid=kWoT_woa_FR12M&vet=12ahUKEwjTifDpvb-QAxUESGwGHckGIqsQM3oECBUQAA..i&w=900&h=600&hcb=2&ved=2ahUKEwjTifDpvb-QAxUESGwGHckGIqsQM3oECBUQAA",
-      "id": "1761399882886"
+      "id": "1",
+      "name": "UMKM yang Sudah Ada",
+      "specialty": "Kuliner",
+      "description": "Deskripsi...",
+      "phone": "0812...",
+      "email": "email@example.com",
+      "image": null,
+      "mapSrcUrl": null 
+    },
+    {
+      "id": "2",
+      "name": "UMKM Baru Dengan Peta",
+      "specialty": "Kerajinan",
+      "description": "Deskripsi lain...",
+      "phone": "0813...",
+      "email": "email2@example.com",
+      "image": null,
+      "mapSrcUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d702.1901765188387!2d105.31817997827062!3d-5.388372170241246!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e40dcbe9fb7268d%3A0xe604f52a4721775f!2sSabah%20Balau%2C%20Kec.%20Tj.%20Bintang%2C%20Kabupaten%20Lampung%20Selatan%2C%20Lampung!5e0!3m2!1sid!2sid!4v1762937087992!5m2!1sid!2sid"
     }
   ]
 }

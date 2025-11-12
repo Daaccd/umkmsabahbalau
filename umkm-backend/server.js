@@ -65,16 +65,26 @@ app.get('/products', async (req, res) => {
 });
 
 // 3. Endpoint untuk POST (menambah) Produk baru
-app.post('/products', async (req, res) => {
-    const newProduct = req.body;
-    // Buat ID unik sederhana
-    newProduct.id = Date.now().toString(); 
-    
-    const db = await readDB();
-    db.products.push(newProduct);
-    await writeDB(db);
-    
-    res.status(201).json(newProduct);
+// PUTARAN: POST /umkms - Tambah UMKM baru
+app.post('/umkms', (req, res) => {
+    // ... (kode validasi admin jika ada) ...
+
+    const db = readDB();
+    const newUMKM = {
+        // Logika ID Anda saat ini
+        id: (db.umkms.length > 0 ? Math.max(...db.umkms.map(u => parseInt(u.id) || 0)) : 0) + 1 + '', 
+        name: req.body.name,
+        specialty: req.body.specialty,
+        description: req.body.description,
+        phone: req.body.phone,
+        email: req.body.email,
+        image: req.body.image || null,
+        mapSrcUrl: req.body.mapSrcUrl || null // <-- TAMBAHKAN BARIS INI
+    };
+
+    db.umkms.push(newUMKM);
+    writeDB(db);
+    res.status(201).json(newUMKM);
 });
 
 // 4. Endpoint untuk DELETE (menghapus) Produk
