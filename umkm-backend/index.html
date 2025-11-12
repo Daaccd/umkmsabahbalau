@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMKM Desa Sabah Balau - Dashboard</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+        }
+        
+        body { 
+            line-height: 1.6; 
+            color: #333; 
+            background: #f5f5f5; 
+        }
+        
+        .container { 
+            width: 90%; 
+            max-width: 1100px; 
+            margin: 0 auto; 
+            padding: 0 15px; 
+        }
+        
+        /* Header */
+        header { 
+            background: #2c5e1a; 
+            color: white; 
+            padding: 1rem 0; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header-content { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+        }
+        
+        .logo { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+        }
+        
+        .logo-icon {
+            font-size: 1.8rem;
+        }
+        
+        .logo h1 { 
+            font-size: 1.3rem; 
+        }
+        
+        nav ul { 
+            display: flex; 
+            list-style: none; 
+            align-items: center;
+        }
+        
+        nav li { 
+            margin-left: 20px; 
+        }
+        
+        nav a { 
+            color: white; 
+            text-decoration: none; 
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        nav a:hover {
+            color: #c8e6c9;
+        }
+        
+        .admin-badge {
+            background: #ff9800;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+        
+        /* Hero */
+        .hero { 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), #2c5e1a; 
+            color: white; 
+            text-align: center; 
+            padding: 4rem 0; 
+        }
+        
+        .hero h2 { 
+            font-size: 2rem; 
+            margin-bottom: 1rem; 
+        }
+        
+        .hero p {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .btn { 
+            display: inline-block; 
+            background: #ff9800; 
+            color: white; 
+            padding: 10px 25px; 
+            border-radius: 5px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            margin-top: 1rem;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #e68900;
+        }
+        
+        .btn-small {
+            display: inline-block;
+            background: #4caf50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            transition: background 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-small:hover {
+            background: #388e3c;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        /* Sections */
+        section { 
+            padding: 3rem 0; 
+        }
+        
+        .section-title { 
+            text-align: center; 
+            margin-bottom: 2rem; 
+        }
+        
+        .section-title h2 { 
+            font-size: 1.8rem; 
+            color: #2c5e1a; 
+            padding-bottom: 10px; 
+            border-bottom: 2px solid #4caf50; 
+            display: inline-block; 
+        }
+        
+        /* Products (CSS Dihapus) */
+        
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(220, 53, 69, 0.8);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* UMKM Profiles */
+        .umkm-profiles { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+            gap: 25px; 
+            margin-bottom: 2rem;
+        }
+        
+        .umkm-card { 
+            background: white; 
+            border-radius: 8px; 
+            overflow: hidden; 
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+            position: relative;
+        }
+        
+        .umkm-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .umkm-img { 
+            height: 160px; 
+            background: #e0e0e0; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #666; 
+        }
+        
+        .umkm-info { 
+            padding: 15px; 
+        }
+        
+        .umkm-info h3 {
+            color: #2c5e1a;
+            margin-bottom: 8px;
+        }
+        
+        .specialty {
+            color: #4caf50;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .contact-info {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        /* Forms */
+        .form-container {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        /* Login Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .modal h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c5e1a;
+        }
+        
+        .modal .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        
+        /* Location */
+        .map-container { 
+            height: 300px; 
+            background: #e0e0e0; 
+            border-radius: 8px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            color: #666; 
+            margin-bottom: 20px;
+        }
+        
+        .location-info {
+            text-align: center;
+        }
+        
+        /* Contact */
+        .contact-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .contact-info-card, .contact-hours {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+        
+        .contact-info-card h3, .contact-hours h3 {
+            color: #2c5e1a;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4caf50;
+        }
+        
+        .contact-detail p, .hours-detail p {
+            margin-bottom: 10px;
+        }
+        
+        /* Footer */
+        footer { 
+            background: #2c5e1a; 
+            color: white; 
+            padding: 2rem 0 1rem; 
+        }
+        
+        .footer-content { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 20px; 
+            margin-bottom: 1.5rem; 
+        }
+        
+        .footer-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .footer-section p, .footer-section a {
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            display: block;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: white;
+        }
+        
+        .copyright { 
+            text-align: center; 
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content { 
+                flex-direction: column; 
+                text-align: center; 
+            }
+            
+            nav ul { 
+                margin-top: 10px; 
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            nav li { 
+                margin: 5px 10px; 
+            }
+            
+            .hero h2 {
+                font-size: 1.7rem;
+            }
+            
+            .contact-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <h2>Login Admin</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" id="cancelLogin">Batal</button>
+                    <button type="submit" class="btn">Login</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <div class="logo-icon">🌿</div>
+                    <h1>UMKM Sabah Balau</h1>
+                </div>
+                <nav>
+                    <ul>
+                        <li><a href="#beranda">Beranda</a></li>
+                        <li><a href="#profil">UMKM</a></li>
+                        <li><a href="#lokasi">Lokasi</a></li>
+                        <li><a href="#kontak">Kontak</a></li>
+                        <li id="adminNav" style="display: none;">
+                            <a href="#" id="adminLink">Admin</a>
+                            <span class="admin-badge" id="adminBadge">Admin</span>
+                            <a href="#" id="logoutLink" style="margin-left: 10px;">Logout</a>
+                        </li>
+                        <li id="loginNav">
+                            <a href="#" id="loginLink">Login Admin</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <section id="beranda" class="hero">
+        <div class="container">
+            <h2>Website UMKM Desa Sabah Balau</h2>
+            <p>Mendukung dan mempromosikan produk lokal untuk pertumbuhan ekonomi desa</p>
+        </div>
+    </section>
+
+    <section id="profil">
+        <div class="container">
+            <div class="section-title">
+                <h2>UMKM</h2>
+            </div>
+            
+            <div class="form-container" id="umkmFormContainer" style="display: none;">
+                <h3>Tambah UMKM Baru</h3>
+                <form id="umkmForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="umkmName">Nama UMKM</label>
+                            <input type="text" id="umkmName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="umkmSpecialty">Spesialisasi</label>
+                            <input type="text" id="umkmSpecialty" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="umkmDescription">Deskripsi UMKM</label>
+                        <textarea id="umkmDescription" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="umkmPhone">Nomor Telepon</label>
+                            <input type="text" id="umkmPhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="umkmEmail">Email</label>
+                            <input type="email" id="umkmEmail" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="umkmImage">URL Foto UMKM</label>
+                        <input type="text" id="umkmImage" placeholder="Opsional - kosongkan untuk gambar default">
+                    </div>
+                    <button type="submit" class="btn">Tambah UMKM</button>
+                </form>
+            </div>
+            
+            <div class="umkm-profiles" id="umkmContainer">
+                </div>
+        </div>
+    </section>
+
+    <section id="lokasi">
+        <div class="container">
+            <div class="section-title">
+                <h2>Lokasi UMKM</h2>
+            </div>
+            <div class="map-container">
+                Peta Lokasi Desa Sabah Balau
+            </div>
+            <div class="location-info">
+                <p>Desa Sabah Balau, Kecamatan Tanjung Bintang, Kabupaten Lampung Selatan</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="kontak">
+        <div class="container">
+            <div class="section-title">
+                <h2>Hubungi Kami</h2>
+            </div>
+            <div class="contact-content">
+                <div class="contact-info-card">
+                    <h3>Informasi Kontak</h3>
+                    <div class="contact-detail">
+                        <p>📍 Desa Sabah Balau, Kec. Tanjung Bintang, Kab. Lampung Selatan</p>
+                        <p>📞 (0721) 123456</p>
+                        <p>✉️ umkmsabahbalau@example.com</p>
+                    </div>
+                </div>
+                <div class="contact-hours">
+                    <h3>Jam Operasional</h3>
+                    <div class="hours-detail">
+                        <p>Senin - Jumat: 08.00 - 17.00 WIB</p>
+                        <p>Sabtu: 08.00 - 15.00 WIB</p>
+                        <p>Minggu: Tutup</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>Tentang Kami</h3>
+                    <p>Website untuk mendukung dan mempromosikan UMKM Desa Sabah Balau dalam rangka memperluas jangkauan pasar.</p>
+                </div>
+                <div class="footer-section">
+                    <h3>Link Cepat</h3>
+                    <a href="#beranda">Beranda</a>
+                    <a href="#profil">UMKM</a>
+                    <a href="#lokasi">Lokasi</a>
+                </div>
+                <div class="footer-section">
+                    <h3>Kontak</h3>
+                    <p>Desa Sabah Balau, Kec. Tanjung Bintang</p>
+                    <p>Kab. Lampung Selatan</p>
+                    <p>Email: umkmsabahbalau@example.com</p>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2023 KELOMPOK 6 PRODUCTIONS - Website UMKM Desa Sabah Balau</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Alamat backend kita
+        const API_URL = 'http://localhost:3000';
+
+        // Status login (tetap pakai localStorage untuk status di browser)
+        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
+
+        // --- FUNGSI RENDER (MENAMPILKAN DATA) ---
+
+        // Fungsi untuk menampilkan produk DIHAPUS
+
+        // Fungsi untuk menampilkan UMKM
+        async function renderUMKMs() {
+            const container = document.getElementById('umkmContainer');
+            container.innerHTML = '';
+
+            // 1. Ambil data dari backend
+            let umkms = [];
+            try {
+                const response = await fetch(`${API_URL}/umkms`);
+                umkms = await response.json();
+            } catch (error) {
+                console.error('Gagal mengambil UMKM:', error);
+                container.innerHTML = '<p>Gagal memuat data UMKM dari server.</p>';
+                return;
+            }
+            
+            if (umkms.length === 0) {
+                container.innerHTML = '<p style="text-align: center; grid-column: 1 / -1;">Belum ada UMKM. Silakan login sebagai admin untuk menambah UMKM.</p>';
+                return;
+            }
+
+            umkms.forEach((umkm) => {
+                const umkmCard = document.createElement('div');
+                umkmCard.className = 'umkm-card';
+
+                let deleteButton = '';
+                if (isLoggedIn) {
+                    // PENTING: Kita ganti dari 'index' menjadi 'umkm.id'
+                    deleteButton = `<button class="delete-btn" onclick="deleteUMKM('${umkm.id}')">×</button>`;
+                }
+
+                umkmCard.innerHTML = `
+                    <div class="umkm-img" style="${umkm.image ? `background-image: url('${umkm.image}'); background-size: cover;` : ''}">
+                        ${!umkm.image ? 'Foto UMKM' : ''}
+                    </div>
+                    <div class="umkm-info">
+                        <h3>${umkm.name}</h3>
+                        <p class="specialty">Spesialisasi: ${umkm.specialty}</p>
+                        <p>${umkm.description}</p>
+                        <div class="contact-info">
+                            <p>📞 ${umkm.phone}</p>
+                            <p>✉️ ${umkm.email}</p>
+                        </div>
+                    </div>
+                    ${deleteButton}
+                `;
+                container.appendChild(umkmCard);
+            });
+        }
+
+        // --- FUNGSI AKSI (TAMBAH, HAPUS, LOGIN) ---
+
+        // Fungsi untuk menambah produk DIHAPUS
+
+        // Fungsi untuk menambah UMKM
+        document.getElementById('umkmForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            if (!isLoggedIn) return;
+
+            // 1. Siapkan data dari form
+            const newUMKM = {
+                name: document.getElementById('umkmName').value,
+                specialty: document.getElementById('umkmSpecialty').value,
+                description: document.getElementById('umkmDescription').value,
+                phone: document.getElementById('umkmPhone').value,
+                email: document.getElementById('umkmEmail').value,
+                image: document.getElementById('umkmImage').value || null
+            };
+
+            // 2. Kirim data ke backend
+            try {
+                const response = await fetch(`${API_URL}/umkms`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newUMKM)
+                });
+
+                if (response.ok) {
+                    renderUMKMs(); // Refresh daftar UMKM
+                    this.reset();
+                    document.getElementById('umkmContainer').scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert('Gagal menambah UMKM.');
+                }
+            } catch (error) {
+                console.error('Error menambah UMKM:', error);
+            }
+        });
+
+        // Fungsi untuk menghapus produk DIHAPUS
+
+        // Fungsi untuk menghapus UMKM (sekarang pakai ID)
+        async function deleteUMKM(id) {
+            if (!isLoggedIn) return;
+            if (!confirm('Apakah Anda yakin ingin menghapus UMKM ini?')) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/umkms/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    renderUMKMs(); // Refresh daftar UMKM
+                } else {
+                    alert('Gagal menghapus UMKM.');
+                }
+            } catch (error) {
+                console.error('Error menghapus UMKM:', error);
+            }
+        }
+
+        // --- FUNGSI LOGIN / LOGOUT ---
+
+        // Fungsi untuk login
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            try {
+                const response = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+
+                if (data.success) {
+                    isLoggedIn = true;
+                    localStorage.setItem('isLoggedIn', 'true');
+                    toggleAdminElements();
+                    // renderProducts(); // Dihapus
+                    renderUMKMs();   // Render ulang untuk tampilkan tombol delete
+                    hideLoginModal();
+                    alert(data.message);
+                } else {
+                    alert(data.message);
+                }
+            } catch (error) {
+                console.error('Error login:', error);
+                alert('Gagal terhubung ke server login.');
+            }
+        });
+
+        // Fungsi untuk logout
+        function logout() {
+            isLoggedIn = false;
+            localStorage.setItem('isLoggedIn', 'false');
+            toggleAdminElements();
+            // renderProducts(); // Dihapus
+            renderUMKMs();   // Render ulang untuk sembunyikan tombol delete
+            alert('Anda telah logout.');
+        }
+        
+        // --- FUNGSI UTILITAS (TIDAK BERUBAH BANYAK) ---
+
+        // Fungsi untuk menampilkan atau menyembunyikan elemen admin
+        function toggleAdminElements() {
+            // const productFormContainer = document.getElementById('productFormContainer'); // Dihapus
+            const umkmFormContainer = document.getElementById('umkmFormContainer');
+            const adminNav = document.getElementById('adminNav');
+            const loginNav = document.getElementById('loginNav');
+            
+            if (isLoggedIn) {
+                // productFormContainer.style.display = 'block'; // Dihapus
+                umkmFormContainer.style.display = 'block';
+                adminNav.style.display = 'block';
+                loginNav.style.display = 'none';
+            } else {
+                // productFormContainer.style.display = 'none'; // Dihapus
+                umkmFormContainer.style.display = 'none';
+                adminNav.style.display = 'none';
+                loginNav.style.display = 'block';
+            }
+        }
+        
+        // Fungsi untuk menampilkan modal login
+        function showLoginModal() {
+            document.getElementById('loginModal').style.display = 'flex';
+        }
+        
+        // Fungsi untuk menyembunyikan modal login
+        function hideLoginModal() {
+            document.getElementById('loginModal').style.display = 'none';
+            document.getElementById('loginForm').reset();
+        }
+        
+        // Inisialisasi saat halaman dimuat
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleAdminElements();
+            
+            // Render data dari server
+            // renderProducts(); // Dihapus
+            renderUMKMs();
+            
+            // Event listener untuk login link
+            document.getElementById('loginLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                showLoginModal();
+            });
+            
+            // Event listener untuk logout link
+            document.getElementById('logoutLink').addEventListener('click', function(e) {
+                e.preventDefault();
+                logout();
+            });
+            
+            // Event listener untuk cancel login
+            document.getElementById('cancelLogin').addEventListener('click', function() {
+                hideLoginModal();
+            });
+            
+            // Smooth scrolling (tetap sama)
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if(target) {
+                        window.scrollTo({
+                            top: target.offsetTop - 70,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

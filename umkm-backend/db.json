@@ -1,0 +1,21 @@
+{
+  "admins": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "admin123"
+    }
+  ],
+  "products": [],
+  "umkms": [
+    {
+      "name": "Apotek Sabah Balau",
+      "specialty": "Kesehatan",
+      "description": "ini apotek",
+      "phone": "08123beliau",
+      "email": "beliau@gmail.com",
+      "image": "https://www.google.com/imgres?q=apotek&imgurl=https%3A%2F%2Fapotek-k24.com%2Fimages%2Fblog%2F16777494720241023045413yunita.isnapelayanan%2520di%2520apotek%2520apa%2520saja.jpg&imgrefurl=https%3A%2F%2Ffranchisek24.com%2Fblog%2F1742%2FPelayanan-di-Apotek-Apa-Saja&docid=p9B5COKmcH1NAM&tbnid=kWoT_woa_FR12M&vet=12ahUKEwjTifDpvb-QAxUESGwGHckGIqsQM3oECBUQAA..i&w=900&h=600&hcb=2&ved=2ahUKEwjTifDpvb-QAxUESGwGHckGIqsQM3oECBUQAA",
+      "id": "1761399882886"
+    }
+  ]
+}
