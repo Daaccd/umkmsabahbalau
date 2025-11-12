@@ -9,16 +9,6 @@
   "products": [],
   "umkms": [
     {
-      "id": "1",
-      "name": "UMKM yang Sudah Ada",
-      "specialty": "Kuliner",
-      "description": "Deskripsi...",
-      "phone": "0812...",
-      "email": "email@example.com",
-      "image": null,
-      "mapSrcUrl": null 
-    },
-    {
       "id": "2",
       "name": "UMKM Baru Dengan Peta",
       "specialty": "Kerajinan",
@@ -26,7 +16,17 @@
       "phone": "0813...",
       "email": "email2@example.com",
       "image": null,
-      "mapSrcUrl": "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d702.1901765188387!2d105.31817997827062!3d-5.388372170241246!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e40dcbe9fb7268d%3A0xe604f52a4721775f!2sSabah%20Balau%2C%20Kec.%20Tj.%20Bintang%2C%20Kabupaten%20Lampung%20Selatan%2C%20Lampung!5e0!3m2!1sid!2sid!4v1762937087992!5m2!1sid!2sid"
+      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9"
+    },
+    {
+      "name": "Apotek Sabah Balau",
+      "specialty": "Obat-obatan",
+      "description": "Menjual obat obatan",
+      "phone": "081200918921",
+      "email": "sabahbalau@apotek.com",
+      "image": null,
+      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9",
+      "id": "1762940945127"
     }
   ]
 }

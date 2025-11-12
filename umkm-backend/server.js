@@ -37,68 +37,6 @@ async function writeDB(data) {
     }
 }
 
-// --- API ENDPOINTS ---
-
-// 1. Endpoint untuk Login Admin
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    const db = await readDB();
-    
-    // Cari admin di database
-    const admin = db.admins.find(
-        (user) => user.username === username && user.password === password
-    );
-    
-    if (admin) {
-        // Login sukses
-        res.json({ success: true, message: 'Login berhasil!' });
-    } else {
-        // Login gagal
-        res.status(401).json({ success: false, message: 'Username atau password salah!' });
-    }
-});
-
-// 2. Endpoint untuk GET (mengambil) semua Produk
-app.get('/products', async (req, res) => {
-    const db = await readDB();
-    res.json(db.products);
-});
-
-// 3. Endpoint untuk POST (menambah) Produk baru
-// PUTARAN: POST /umkms - Tambah UMKM baru
-app.post('/umkms', (req, res) => {
-    // ... (kode validasi admin jika ada) ...
-
-    const db = readDB();
-    const newUMKM = {
-        // Logika ID Anda saat ini
-        id: (db.umkms.length > 0 ? Math.max(...db.umkms.map(u => parseInt(u.id) || 0)) : 0) + 1 + '', 
-        name: req.body.name,
-        specialty: req.body.specialty,
-        description: req.body.description,
-        phone: req.body.phone,
-        email: req.body.email,
-        image: req.body.image || null,
-        mapSrcUrl: req.body.mapSrcUrl || null // <-- TAMBAHKAN BARIS INI
-    };
-
-    db.umkms.push(newUMKM);
-    writeDB(db);
-    res.status(201).json(newUMKM);
-});
-
-// 4. Endpoint untuk DELETE (menghapus) Produk
-app.delete('/products/:id', async (req, res) => {
-    const { id } = req.params;
-    
-    const db = await readDB();
-    // Filter produk, sisakan yang ID-nya TIDAK SAMA dengan id yang mau dihapus
-    db.products = db.products.filter((product) => product.id !== id);
-    await writeDB(db);
-    
-    res.json({ success: true, message: 'Produk berhasil dihapus.' });
-});
-
 // 5. Endpoint untuk GET (mengambil) semua UMKM
 app.get('/umkms', async (req, res) => {
     const db = await readDB();
