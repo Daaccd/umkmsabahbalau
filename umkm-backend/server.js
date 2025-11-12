@@ -66,7 +66,28 @@ app.delete('/umkms/:id', async (req, res) => {
     
     res.json({ success: true, message: 'UMKM berhasil dihapus.' });
 });
+// 8. Endpoint untuk POST (Login) Admin
+app.post('/login', async (req, res) => {
+    // 1. Ambil username dan password dari body request
+    const { username, password } = req.body;
 
+    // 2. Baca database
+    const db = await readDB();
+
+    // 3. Cari admin berdasarkan username
+    const admin = db.admins.find(
+        (a) => a.username === username
+    );
+
+    // 4. Periksa apakah admin ada DAN password-nya cocok
+    if (admin && admin.password === password) {
+        // Jika cocok, kirim respon sukses
+        res.json({ success: true, message: 'Login berhasil!' });
+    } else {
+        // Jika tidak cocok, kirim respon gagal (401 Unauthorized)
+        res.status(401).json({ success: false, message: 'Username atau password salah.' });
+    }
+});
 
 // --- Menjalankan Server ---
 app.listen(PORT, () => {

@@ -427,3 +427,30 @@ footer {
         grid-template-columns: 1fr;
     }
 }
+
+/* --- TAMBAHAN UNTUK TOMBOL WA --- */
+
+.contact-info .button-group {
+    display: flex;       /* Membuat tombol berdampingan */
+    flex-wrap: wrap;     /* Izinkan tombol turun ke baris baru di layar kecil */
+    gap: 10px;           /* Memberi jarak 10px antar tombol */
+    margin-top: 10px;    /* Memberi jarak dari teks kontak di atasnya */
+}
+
+/* Menghapus margin-top default dari btn-small 
+  AGAR tidak ada jarak atas yang aneh di dalam grup 
+*/
+.contact-info .button-group .btn-small {
+    margin-top: 0;
+}
+
+/* Memberi warna khusus untuk tombol WhatsApp */
+.btn-whatsapp {
+    background-color: #25D366; /* Warna hijau resmi WhatsApp */
+}
+
+.btn-whatsapp:hover {
+    background-color: #128C7E; /* Warna hijau tua WhatsApp saat di-hover */
+}
+
+/* --- AKHIR TAMBAHAN --- */

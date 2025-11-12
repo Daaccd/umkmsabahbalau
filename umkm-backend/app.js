@@ -38,15 +38,17 @@ async function renderUMKMs() {
             // PENTING: Kita ganti dari 'index' menjadi 'umkm.id'
             deleteButton = `<button class="delete-btn" onclick="deleteUMKM('${umkm.id}')">×</button>`;
         }
-
-// --- ▼▼▼ TAMBAHKAN LOGIKA INI ▼▼▼ ---
-        let mapButton = '';
-        // Periksa apakah umkm.mapSrcUrl ada dan tidak kosong
-        if (umkm.mapSrcUrl) {
-            // Buat tombol sebagai link (tag <a>) yang membuka tab baru
-            mapButton = `<a href="${umkm.mapSrcUrl}" target="_blank" class="btn-small btn-map">📍 Lihat Peta</a>`;
+        
+        // --- PERUBAHAN DIMULAI DISINI ---
+        // 1. Membuat nomor WA yang valid (mengganti 0 di depan dengan 62)
+        let waNumber = umkm.phone.replace(/[^0-9]/g, ''); // Hapus spasi, +, -
+        if (waNumber.startsWith('0')) {
+            waNumber = '62' + waNumber.substring(1);
+        } else if (waNumber.length > 0 && !waNumber.startsWith('62')) { 
+            // Jika nomornya 812... (tanpa 0), tambahkan 62
+            waNumber = '62' + waNumber;
         }
-        // --- ▲▲▲ AKHIR TAMBAHAN BARU ▲▲▲ ---
+        // --- AKHIR PERUBAHAN 1 ---
 
         umkmCard.innerHTML = `
             <div class="umkm-img" style="${umkm.image ? `background-image: url('${umkm.image}'); background-size: cover;` : ''}">
@@ -56,11 +58,16 @@ async function renderUMKMs() {
                 <h3>${umkm.name}</h3>
                 <p class="specialty">Spesialisasi: ${umkm.specialty}</p>
                 <p>${umkm.description}</p>
+                
                 <div class="contact-info">
-                    <p>📞 ${umkm.phone}</p>
-                    <p>✉️ ${umkm.email}</p>
-                    <p>${mapButton}</p>
-                </div>
+                    <p><strong>Alamat:</strong> ${umkm.address || 'N/A'}</p>
+                    <p><strong>Kontak:</strong> ${umkm.phone}</p>
+                    
+                    <div class="button-group">
+                        <a href="${umkm.mapSrcUrl}" target="_blank" class="btn-small">Lihat Peta</a>
+                        <a href="https://wa.me/${waNumber}" target="_blank" class="btn-small btn-whatsapp">Chat WA</a>
+                    </div>
+                    </div>
             </div>
             ${deleteButton}
         `;
@@ -70,17 +77,48 @@ async function renderUMKMs() {
 
 // --- FUNGSI AKSI (TAMBAH, HAPUS, LOGIN) ---
 
-// Fungsi untuk menambah produk DIHAPUS
+// Fungsi untuk menambah profil UMKM
+document.getElementById('umkmForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    if (!isLoggedIn) return;
 
-// Fungsi untuk menambah UMKM
+    // 1. Siapkan data dari form
+    const newUMKM = {
+        name: document.getElementById('umkmName').value,
+        specialty: document.getElementById('umkmSpecialty').value,
+        description: document.getElementById('umkmDescription').value,
+        phone: document.getElementById('umkmPhone').value,
+        email: document.getElementById('umkmEmail').value,
+        address: document.getElementById('umkmAddress').value, // Menambahkan address
+        mapSrcUrl: document.getElementById('umkmMapUrl').value, // Menambahkan mapSrcUrl
+        image: document.getElementById('umkmImage').value || null
+    };
+
+    // 2. Kirim data ke backend
+    try {
+        const response = await fetch(`${API_URL}/umkms`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newUMKM)
+        });
+
+        if (response.ok) {
+            renderUMKMs(); // Refresh daftar UMKM
+            this.reset();
+            document.getElementById('umkmContainer').scrollIntoView({ behavior: 'smooth' });
+        } else {
+            alert('Gagal menambah profil UMKM.');
+        }
+    } catch (error) {
+        console.error('Error menambah UMKM:', error);
+    }
+});
 
 
-// Fungsi untuk menghapus produk DIHAPUS
-
-// Fungsi untuk menghapus UMKM (sekarang pakai ID)
+// Fungsi untuk menghapus profil UMKM (sekarang pakai ID)
 async function deleteUMKM(id) {
     if (!isLoggedIn) return;
-    if (!confirm('Apakah Anda yakin ingin menghapus UMKM ini?')) return;
+    if (!confirm('Apakah Anda yakin ingin menghapus profil UMKM ini?')) return;
     
     try {
         const response = await fetch(`${API_URL}/umkms/${id}`, {
@@ -90,7 +128,7 @@ async function deleteUMKM(id) {
         if (response.ok) {
             renderUMKMs(); // Refresh daftar UMKM
         } else {
-            alert('Gagal menghapus UMKM.');
+            alert('Gagal menghapus profil UMKM.');
         }
     } catch (error) {
         console.error('Error menghapus UMKM:', error);
@@ -99,38 +137,23 @@ async function deleteUMKM(id) {
 
 // --- FUNGSI LOGIN / LOGOUT ---
 
-// Fungsi untuk login
-
-
-// Fungsi untuk logout
-function logout() {
-    isLoggedIn = false;
-    localStorage.setItem('isLoggedIn', 'false');
-    toggleAdminElements();
-    // renderProducts(); // Dihapus
-    renderUMKMs();   // Render ulang untuk sembunyikan tombol delete
-    alert('Anda telah logout.');
-}
-
-// --- FUNGSI UTILITAS (TIDAK BERUBAH BANYAK) ---
-
 // Fungsi untuk menampilkan atau menyembunyikan elemen admin
 function toggleAdminElements() {
-    // const productFormContainer = document.getElementById('productFormContainer'); // Dihapus
     const umkmFormContainer = document.getElementById('umkmFormContainer');
     const adminNav = document.getElementById('adminNav');
     const loginNav = document.getElementById('loginNav');
+    const deleteButtons = document.querySelectorAll('.delete-btn');
     
     if (isLoggedIn) {
-        // productFormContainer.style.display = 'block'; // Dihapus
         umkmFormContainer.style.display = 'block';
         adminNav.style.display = 'block';
         loginNav.style.display = 'none';
+        deleteButtons.forEach(btn => btn.style.display = 'flex');
     } else {
-        // productFormContainer.style.display = 'none'; // Dihapus
         umkmFormContainer.style.display = 'none';
         adminNav.style.display = 'none';
         loginNav.style.display = 'block';
+        deleteButtons.forEach(btn => btn.style.display = 'none');
     }
 }
 
@@ -145,80 +168,57 @@ function hideLoginModal() {
     document.getElementById('loginForm').reset();
 }
 
-// Inisialisasi saat halaman dimuat
-document.addEventListener('DOMContentLoaded', function() {
-    toggleAdminElements();
-    
-    // Render data dari server
-    // renderProducts(); // Dihapus
-    renderUMKMs();
+// Fungsi untuk login
+async function handleLogin(e) {
+    e.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
 
-     document.getElementById('umkmForm').addEventListener('submit', async function(e) {
-     e.preventDefault();
-      if (!isLoggedIn) return;
-
-    // 1. Siapkan data dari form
-     const newUMKM = {
-         name: document.getElementById('umkmName').value,
-         specialty: document.getElementById('umkmSpecialty').value,
-         description: document.getElementById('umkmDescription').value,
-         phone: document.getElementById('umkmPhone').value,
-         email: document.getElementById('umkmEmail').value,
-         image: document.getElementById('umkmImage').value || null,
-         mapSrcUrl: document.getElementById('umkmMapUrl').value || null // <-- TAMBAHKAN BARIS INI
-     };
-
-     // 2. Kirim data ke backend
-      try {
-          const response = await fetch(`${API_URL}/umkms`, {
-             method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newUMKM)
-            });
-
-            if (response.ok) {
-                renderUMKMs(); // Refresh daftar UMKM
-                this.reset();
-                document.getElementById('umkmContainer').scrollIntoView({ behavior: 'smooth' });
-            } else {
-                alert('Gagal menambah UMKM.');
-         }
-        } catch (error) {
-        console.error('Error menambah UMKM:', error);
-        }
-    });
-
-      document.getElementById('loginForm').addEventListener('submit', async function(e) {
-      e.preventDefault();
-
-     const username = document.getElementById('username').value;
-      const password = document.getElementById('password').value;
-
-      try {
-          const response = await fetch(`${API_URL}/login`, {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username, password })
-         });
+    try {
+        const response = await fetch(`${API_URL}/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
         
-          const data = await response.json();
+        const data = await response.json();
 
-           if (data.success) {
-               isLoggedIn = true;
-               localStorage.setItem('isLoggedIn', 'true');
-               toggleAdminElements();
-            // renderProducts(); // Dihapus
-               renderUMKMs();   // Render ulang untuk tampilkan tombol delete
-              hideLoginModal();
-              alert(data.message);
-          } else {
-              alert(data.message);
-           }
-       } catch (error) {
-           console.error('Error login:', error);
-           alert('Gagal terhubung ke server login.');
+        if (data.success) {
+            isLoggedIn = true;
+            localStorage.setItem('isLoggedIn', 'true');
+            await renderUMKMs(); // Render ulang dulu
+            toggleAdminElements(); // Baru toggle elemen
+            hideLoginModal();
+            alert(data.message);
+        } else {
+            alert(data.message);
         }
+    } catch (error) {
+        console.error('Error login:', error);
+        alert('Gagal terhubung ke server login.');
+    }
+}
+
+// Fungsi untuk logout
+async function logout() {
+    isLoggedIn = false;
+    localStorage.setItem('isLoggedIn', 'false');
+    await renderUMKMs(); // Render ulang dulu
+    toggleAdminElements(); // Baru toggle elemen
+    alert('Anda telah logout.');
+}
+
+// --- Inisialisasi saat halaman dimuat ---
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Render data awal
+    renderUMKMs().then(() => {
+        // Panggil toggleAdminElements setelah render selesai
+        toggleAdminElements();
     });
+    
+    // Event listener untuk form login
+    document.getElementById('loginForm').addEventListener('submit', handleLogin);
     
     // Event listener untuk login link
     document.getElementById('loginLink').addEventListener('click', function(e) {
