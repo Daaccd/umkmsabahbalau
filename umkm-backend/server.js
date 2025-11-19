@@ -89,6 +89,58 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// ... (kode sebelumnya tetap sama)
+
+// --- FITUR TRACKING ---
+
+// 9. Endpoint untuk Mencatat Kunjungan Website (Visitor Counter)
+app.post('/visit', async (req, res) => {
+    const db = await readDB();
+    
+    // Jika belum ada stats, buat baru
+    if (!db.stats) {
+        db.stats = { visitors: 0 };
+    }
+
+    db.stats.visitors += 1; // Tambah 1 pengunjung
+    await writeDB(db);
+
+    res.json({ visitors: db.stats.visitors });
+});
+
+// 10. Endpoint untuk Mengambil Jumlah Pengunjung (Tanpa menambah)
+app.get('/visit', async (req, res) => {
+    const db = await readDB();
+    const count = db.stats ? db.stats.visitors : 0;
+    res.json({ visitors: count });
+});
+
+// 11. Endpoint untuk Mencatat Klik WhatsApp per UMKM
+app.post('/umkms/:id/click-wa', async (req, res) => {
+    const { id } = req.params;
+    const db = await readDB();
+
+    const umkmIndex = db.umkms.findIndex((u) => u.id === id);
+
+    if (umkmIndex !== -1) {
+        // Jika belum ada field waClicks, set jadi 0 dulu
+        if (!db.umkms[umkmIndex].waClicks) {
+            db.umkms[umkmIndex].waClicks = 0;
+        }
+
+        db.umkms[umkmIndex].waClicks += 1;
+        await writeDB(db);
+        
+        res.json({ 
+            success: true, 
+            clicks: db.umkms[umkmIndex].waClicks, 
+            message: 'Klik WA tercatat' 
+        });
+    } else {
+        res.status(404).json({ success: false, message: 'UMKM tidak ditemukan' });
+    }
+});
+
 // --- Menjalankan Server ---
 app.listen(PORT, () => {
     console.log(`Server backend berjalan di http://localhost:${PORT}`);

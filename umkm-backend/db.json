@@ -1,4 +1,7 @@
 {
+  "stats": {
+    "visitors": 235
+  },
   "admins": [
     {
       "id": "1",
@@ -16,7 +19,8 @@
       "phone": "0813...",
       "email": "email2@example.com",
       "image": null,
-      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9"
+      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9",
+      "waClicks": 0
     },
     {
       "name": "Apotek Sabah Balau",
@@ -26,7 +30,8 @@
       "email": "sabahbalau@apotek.com",
       "image": null,
       "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9",
-      "id": "1762940945127"
+      "id": "1762940945127",
+      "waClicks": 0
     }
   ]
 }

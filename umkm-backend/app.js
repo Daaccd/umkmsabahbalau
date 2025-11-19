@@ -41,16 +41,18 @@ async function renderUMKMs() {
         
         // --- PERUBAHAN DIMULAI DISINI ---
         // 1. Membuat nomor WA yang valid (mengganti 0 di depan dengan 62)
-        let waNumber = umkm.phone.replace(/[^0-9]/g, ''); // Hapus spasi, +, -
+        let waNumber = umkm.phone.replace(/[^0-9]/g, '');
         if (waNumber.startsWith('0')) {
             waNumber = '62' + waNumber.substring(1);
         } else if (waNumber.length > 0 && !waNumber.startsWith('62')) { 
-            // Jika nomornya 812... (tanpa 0), tambahkan 62
             waNumber = '62' + waNumber;
         }
+
+        // Ambil jumlah klik (default 0 jika tidak ada)
+        const clickCount = umkm.waClicks || 0;
         // --- AKHIR PERUBAHAN 1 ---
 
-        umkmCard.innerHTML = `
+umkmCard.innerHTML = `
             <div class="umkm-img" style="${umkm.image ? `background-image: url('${umkm.image}'); background-size: cover;` : ''}">
                 ${!umkm.image ? 'Foto UMKM' : ''}
             </div>
@@ -59,15 +61,25 @@ async function renderUMKMs() {
                 <p class="specialty">Spesialisasi: ${umkm.specialty}</p>
                 <p>${umkm.description}</p>
                 
+                <p style="font-size: 0.8rem; color: #666; margin-top: 5px;">
+                    <span style="color: #25D366;">&#128242;</span> Dihubungi via WA: <strong>${clickCount}</strong> kali
+                </p>
+
                 <div class="contact-info">
                     <p><strong>Alamat:</strong> ${umkm.address || 'N/A'}</p>
                     <p><strong>Kontak:</strong> ${umkm.phone}</p>
                     
                     <div class="button-group">
                         <a href="${umkm.mapSrcUrl}" target="_blank" class="btn-small">Lihat Peta</a>
-                        <a href="https://wa.me/${waNumber}" target="_blank" class="btn-small btn-whatsapp">Chat WA</a>
+                        
+                        <a href="https://wa.me/${waNumber}" 
+                           target="_blank" 
+                           class="btn-small btn-whatsapp"
+                           onclick="trackWAClick('${umkm.id}')">
+                           Chat WA
+                        </a>
                     </div>
-                    </div>
+                </div>
             </div>
             ${deleteButton}
         `;
@@ -208,12 +220,69 @@ async function logout() {
     alert('Anda telah logout.');
 }
 
+// --- FITUR TRACKING ---
+
+// Fungsi mencatat kunjungan (dijalankan saat load)
+async function trackVisitor() {
+    try {
+        const response = await fetch(`${API_URL}/visit`, { method: 'POST' });
+        const data = await response.json();
+        
+        const counterEl = document.getElementById('visitorCounter');
+        if (counterEl) {
+            counterEl.innerText = data.visitors;
+        }
+    } catch (error) {
+        console.error('Gagal mencatat kunjungan:', error);
+    }
+}
+
+// Fungsi mencatat klik WA
+// Fungsi mencatat kunjungan (Anti-Loop Version)
+async function trackVisitor() {
+    const counterEl = document.getElementById('visitorCounter');
+
+    try {
+        // 1. Cek di memori browser: Apakah orang ini barusan sudah kita hitung?
+        const hasVisited = sessionStorage.getItem('hasVisited');
+        
+        let data;
+
+        if (!hasVisited) {
+            // KONDISI A: Belum pernah berkunjung di sesi ini
+            // -> Panggil endpoint POST (Tambah +1 ke database)
+            const response = await fetch(`${API_URL}/visit`, { method: 'POST' });
+            data = await response.json();
+            
+            // -> Simpan "tanda" di browser bahwa dia sudah dihitung
+            sessionStorage.setItem('hasVisited', 'true');
+        } else {
+            // KONDISI B: Sudah berkunjung (mungkin halaman habis refresh otomatis)
+            // -> Panggil endpoint GET (Hanya ambil angka, JANGAN tambah +1)
+            // Pastikan kamu sudah punya endpoint GET /visit di server.js (dari langkah sebelumnya)
+            const response = await fetch(`${API_URL}/visit`, { method: 'GET' });
+            data = await response.json();
+        }
+        
+        // 2. Tampilkan angka ke footer
+        if (counterEl) {
+            counterEl.innerText = data.visitors;
+        }
+
+    } catch (error) {
+        console.error('Gagal mencatat/mengambil data kunjungan:', error);
+        if(counterEl) counterEl.innerText = '-';
+    }
+}
+
 // --- Inisialisasi saat halaman dimuat ---
 document.addEventListener('DOMContentLoaded', function() {
     
+// Jalankan tracker pengunjung
+    trackVisitor(); 
+
     // Render data awal
     renderUMKMs().then(() => {
-        // Panggil toggleAdminElements setelah render selesai
         toggleAdminElements();
     });
     
