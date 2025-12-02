@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>UMKM Desa Sabah Balau - Dashboard</title>
-    
     <link rel="stylesheet" href="styles.css">
-    
     <script src="app.js" defer></script>
 </head>
 <body>
@@ -30,6 +28,57 @@
         </div>
     </div>
 
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <h2>Edit UMKM</h2>
+            <form id="editForm">
+                <input type="hidden" id="editId"> 
+                
+                <div class="form-group">
+                    <label>Nama UMKM</label>
+                    <input type="text" id="editName" required>
+                </div>
+                <div class="form-group">
+                    <label>Spesialisasi</label>
+                    <input type="text" id="editSpecialty" required>
+                </div>
+                <div class="form-group">
+                    <label>Deskripsi</label>
+                    <textarea id="editDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Nomor Telepon</label>
+                    <input type="text" id="editPhone" required>
+                </div>
+                <div class="form-group">
+                    <label>Alamat</label>
+                    <input type="text" id="editAddress" required>
+                </div>
+                <div class="form-group">
+                    <label>URL Peta (Google Maps)</label>
+                    <input type="text" id="editMapUrl" required>
+                </div>
+                
+                <div class="form-group" style="background: #f9f9f9; padding: 10px; border-radius: 5px;">
+                    <label>Ganti Foto UMKM</label>
+                    
+                    <small style="font-weight:bold;">Opsi 1: Upload dari HP/Komputer</small>
+                    <input type="file" id="editFile" accept="image/*" style="margin-bottom: 10px;">
+                    
+                    <small style="font-weight:bold;">Opsi 2: Link Google Drive / URL Gambar</small>
+                    <input type="text" id="editImage" placeholder="Contoh: https://drive.google.com/file/d/...">
+                    
+                    <small style="display:block; margin-top:5px; color:#666;">*Biarkan kosong semua jika tidak ingin mengubah foto.</small>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <header>
         <div class="container">
             <div class="header-content">
@@ -44,8 +93,7 @@
                         <li><a href="#lokasi">Lokasi</a></li>
                         <li><a href="#kontak">Kontak</a></li>
                         <li id="adminNav" style="display: none;">
-                            <a href="#" id="adminLink">Admin</a>
-                            <span class="admin-badge" id="adminBadge">Admin</span>
+                            <span class="admin-badge">Admin Mode</span>
                             <a href="#" id="logoutLink" style="margin-left: 10px;">Logout</a>
                         </li>
                         <li id="loginNav">
@@ -87,25 +135,36 @@
                         <label for="umkmDescription">Deskripsi UMKM</label>
                         <textarea id="umkmDescription" required></textarea>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="umkmPhone">Nomor Telepon</label>
+                        <input type="text" id="umkmPhone" required>
+                    </div>
+                    
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="umkmPhone">Nomor Telepon</label>
-                            <input type="text" id="umkmPhone" required>
+                            <label for="umkmAddress">Alamat</label>
+                            <input type="text" id="umkmAddress" required>
                         </div>
                         <div class="form-group">
-                            <label for="umkmEmail">Email</label>
-                            <input type="email" id="umkmEmail" required>
+                            <label for="umkmMapUrl">URL Google Maps</label>
+                            <input type="text" id="umkmMapUrl" required>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label for="umkmImage">URL Foto UMKM</label>
-                        <input type="text" id="umkmImage" placeholder="Opsional - kosongkan untuk gambar default">
+
+                    <div class="form-group" style="background: #f9f9f9; padding: 10px; border-radius: 5px;">
+                        <label>Foto UMKM</label>
+                        <small>Pilih salah satu (Upload atau Link):</small>
+                        
+                        <div style="margin-top:5px;">
+                            <input type="file" id="umkmFile" accept="image/*">
+                        </div>
+                        <div style="margin-top:5px;">
+                            <input type="text" id="umkmImage" placeholder="Atau tempel Link Google Drive di sini">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="umkmMapUrl">URL Peta Google Maps (Hanya SRC)</label>
-                        <input type="text" id="umkmMapUrl" placeholder="Opsional - Salin HANYA URL 'src' dari kode semat Google Maps">
-                    </div>
-                    <button type="submit" class="btn">Tambah UMKM</button>
+
+                    <button type="submit" class="btn">Tambah Profil UMKM</button>
                 </form>
             </div>
             
@@ -114,44 +173,30 @@
         </div>
     </section>
 
-<section id="lokasi">
-    <div class="container">
-        <div class="section-title">
-            <h2>Lokasi Desa Sabah Balau</h2>
+    <section id="lokasi">
+        <div class="container">
+            <div class="section-title"><h2>Lokasi Desa</h2></div>
+            <div class="map-container">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31789.349863089173!2d105.314!3d-5.386!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNcKwMjMnMDkuNiJTIDEwNcKwMTgnNTAuNCJF!5e0!3m2!1sen!2sid!4v1600000000000" 
+                    width="100%" height="450" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+            </div>
+            <div class="container">
+                <div class="location-info">
+                    <p>Desa Sabah Balau, Kecamatan Tanjung Bintang, Kabupaten Lampung Selatan</p>
+                </div>
+            </div>
         </div>
-    </div>
-    
-    <div class="map-container">
-        <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15887.801642103328!2d105.33088034872938!3d-5.360113886571436!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e40c5b57fd3a5c7%3A0x80c3c54a377d13c7!2sSabah%20Balau%2C%20Kec.%20Tj.%20Bintang%2C%20Kabupaten%20Lampung%20Selatan%2C%20Lampung!5e0!3m2!1sid!2sid!4v1678888888888!5m2!1sid!2sid" 
-            width="100%" 
-            height="450" 
-            style="border:0;" 
-            allowfullscreen="" 
-            loading="lazy" 
-            referrerpolicy="no-referrer-when-downgrade">
-        </iframe>
-    </div>
-    
-    <div class="container">
-        <div class="location-info">
-            <p>Desa Sabah Balau, Kecamatan Tanjung Bintang, Kabupaten Lampung Selatan</p>
-        </div>
-    </div>
-</section>
+    </section>
 
     <section id="kontak">
         <div class="container">
-            <div class="section-title">
-                <h2>Hubungi Kami</h2>
-            </div>
+            <div class="section-title"><h2>Hubungi Kami</h2></div>
             <div class="contact-content">
                 <div class="contact-info-card">
                     <h3>Informasi Kontak</h3>
                     <div class="contact-detail">
-                        <p>📍 Desa Sabah Balau, Kec. Tanjung Bintang, Kab. Lampung Selatan</p>
-                        <p>📞 (0721) 123456</p>
-                        <p>✉️ umkmsabahbalau@example.com</p>
+                        <p>📍 Desa Sabah Balau, Kec. Tanjung Bintang</p>
+                        <p>✉️ umkmsabahbalau@gmail.com</p>
                     </div>
                 </div>
                 <div class="contact-hours">
@@ -166,34 +211,30 @@
         </div>
     </section>
 
-<footer>
+    <footer>
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
                     <h3>Tentang Kami</h3>
-                    <p>Website untuk mendukung dan mempromosikan UMKM Desa Sabah Balau dalam rangka memperluas jangkauan pasar.</p>
+                    <p>Mendukung UMKM Desa Sabah Balau.</p>
                 </div>
                 <div class="footer-section">
                     <h3>Link Cepat</h3>
                     <a href="#beranda">Beranda</a>
                     <a href="#profil">UMKM</a>
-                    <a href="#lokasi">Lokasi</a>
                 </div>
                 <div class="footer-section">
                     <h3>Kontak</h3>
-                    <p>Desa Sabah Balau, Kec. Tanjung Bintang</p>
-                    <p>Kab. Lampung Selatan</p>
-                    <p>Email: umkmsabahbalau@example.com</p>
+                    <p>Email: umkmsabahbalau@gmail.com</p>
                 </div>
             </div>
+            <div class="stat-counter">
+                <p>👥 Total Pengunjung: <span id="visitorCount">0</span></p>
+            </div>
             <div class="copyright">
-                <p>© 2023 KELOMPOK 6 PRODUCTIONS - Website UMKM Desa Sabah Balau</p>
-                <p style="font-size: 0.8rem; margin-top: 5px; color: #ff9800;">
-                    Total Pengunjung Website: <span id="visitorCounter">Loading...</span>
-                </p>
+                <p>© 2025 KELOMPOK 6 KKN - UMKM Sabah Balau</p>
             </div>
         </div>
     </footer>
-    
-    </body>
+</body>
 </html>

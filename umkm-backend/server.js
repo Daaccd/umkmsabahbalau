@@ -1,147 +1,186 @@
-// Import modul yang diperlukan
 const express = require('express');
-const fs = require('fs').promises; // Kita pakai 'fs.promises' untuk async/await
+const fs = require('fs').promises; 
+const fsDirect = require('fs'); 
 const cors = require('cors');
+const path = require('path');   
+const multer = require('multer'); 
 
-// Inisialisasi aplikasi Express
 const app = express();
-const PORT = 3000; // Backend akan berjalan di port 3000
+const PORT = 3000; 
 
-// Middleware
-app.use(cors()); // Mengizinkan Cross-Origin Resource Sharing (CORS)
-app.use(express.json()); // Mengizinkan server membaca JSON dari body request
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true })); 
 
-// Path ke file database kita
+// --- KONFIGURASI UPLOAD ---
+const uploadDir = './uploads';
+if (!fsDirect.existsSync(uploadDir)){
+    fsDirect.mkdirSync(uploadDir);
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'uploads/');
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({ storage: storage });
+
+// Folder uploads bisa diakses browser
+app.use('/uploads', express.static('uploads'));
+
 const DB_PATH = './db.json';
 
-// --- FUNGSI HELPER (BACA/TULIS DB) ---
-
-// Fungsi untuk membaca database
+// --- FUNGSI HELPER DB ---
 async function readDB() {
+    const defaultData = { admins: [], umkms: [], stats: { visits: 0, waClicks: {} } };
     try {
         const data = await fs.readFile(DB_PATH, 'utf-8');
+        if (!data || data.trim() === "") return defaultData;
         return JSON.parse(data);
     } catch (error) {
-        console.error("Error membaca database:", error);
-        // Jika file tidak ada atau error, kembalikan struktur default
-        return { admins: [], products: [], umkms: [] };
+        return defaultData;
     }
 }
 
-// Fungsi untuk menulis ke database
 async function writeDB(data) {
     try {
         await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2), 'utf-8');
     } catch (error) {
-        console.error("Error menulis ke database:", error);
+        console.error("Error menulis DB:", error);
     }
 }
 
-// 5. Endpoint untuk GET (mengambil) semua UMKM
+// --- ENDPOINTS ---
+
+// 1. GET Semua UMKM
 app.get('/umkms', async (req, res) => {
     const db = await readDB();
-    res.json(db.umkms);
+    res.json(db.umkms || []);
 });
 
-// 6. Endpoint untuk POST (menambah) UMKM baru
-app.post('/umkms', async (req, res) => {
-    const newUMKM = req.body;
-    // Buat ID unik sederhana
-    newUMKM.id = Date.now().toString();
-    
-    const db = await readDB();
-    db.umkms.push(newUMKM);
-    await writeDB(db);
-    
-    res.status(201).json(newUMKM);
+// 2. POST (Tambah) UMKM
+app.post('/umkms', upload.single('imageFile'), async (req, res) => {
+    try {
+        const db = await readDB();
+        if (!db.umkms) db.umkms = [];
+
+        const newUMKM = {
+            id: Date.now().toString(),
+            name: req.body.name,
+            specialty: req.body.specialty,
+            description: req.body.description,
+            phone: req.body.phone,
+            address: req.body.address,
+            mapSrcUrl: req.body.mapSrcUrl,
+            // Prioritas: File Upload > URL Manual > Null
+            image: req.file 
+                ? `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}` 
+                : (req.body.imageUrl || null)
+        };
+        
+        db.umkms.push(newUMKM);
+        await writeDB(db);
+        res.status(201).json(newUMKM);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Gagal menyimpan data" });
+    }
 });
 
-// 7. Endpoint untuk DELETE (menghapus) UMKM
+// 3. PUT (Edit) UMKM
+app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
+    const { id } = req.params;
+    try {
+        const db = await readDB();
+        const index = db.umkms.findIndex(umkm => umkm.id === id);
+        
+        if (index !== -1) {
+            const oldData = db.umkms[index];
+            let finalImage = oldData.image; // Default pakai lama
+            
+            if (req.file) {
+                // Jika ada file baru diupload
+                finalImage = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+            } else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") {
+                // Jika admin memasukkan URL baru (misal Google Drive)
+                finalImage = req.body.imageUrl;
+            }
+
+            const updatedData = {
+                id: id,
+                name: req.body.name,
+                specialty: req.body.specialty,
+                description: req.body.description,
+                phone: req.body.phone,
+                address: req.body.address,
+                mapSrcUrl: req.body.mapSrcUrl,
+                image: finalImage
+            };
+
+            db.umkms[index] = updatedData;
+            await writeDB(db);
+            res.json({ success: true, message: 'UMKM berhasil diupdate.' });
+        } else {
+            res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Gagal update data" });
+    }
+});
+
+// 4. DELETE UMKM
 app.delete('/umkms/:id', async (req, res) => {
     const { id } = req.params;
-    
     const db = await readDB();
+    if (!db.umkms) db.umkms = [];
     db.umkms = db.umkms.filter((umkm) => umkm.id !== id);
     await writeDB(db);
-    
-    res.json({ success: true, message: 'UMKM berhasil dihapus.' });
+    res.json({ success: true });
 });
-// 8. Endpoint untuk POST (Login) Admin
+
+// 5. LOGIN
 app.post('/login', async (req, res) => {
-    // 1. Ambil username dan password dari body request
     const { username, password } = req.body;
-
-    // 2. Baca database
     const db = await readDB();
-
-    // 3. Cari admin berdasarkan username
-    const admin = db.admins.find(
-        (a) => a.username === username
-    );
-
-    // 4. Periksa apakah admin ada DAN password-nya cocok
+    const admin = (db.admins || []).find((a) => a.username === username);
     if (admin && admin.password === password) {
-        // Jika cocok, kirim respon sukses
         res.json({ success: true, message: 'Login berhasil!' });
     } else {
-        // Jika tidak cocok, kirim respon gagal (401 Unauthorized)
-        res.status(401).json({ success: false, message: 'Username atau password salah.' });
+        res.status(401).json({ success: false, message: 'Salah username/password' });
     }
 });
 
-// ... (kode sebelumnya tetap sama)
-
-// --- FITUR TRACKING ---
-
-// 9. Endpoint untuk Mencatat Kunjungan Website (Visitor Counter)
-app.post('/visit', async (req, res) => {
+// 6. STATS
+app.get('/stats', async (req, res) => {
     const db = await readDB();
-    
-    // Jika belum ada stats, buat baru
-    if (!db.stats) {
-        db.stats = { visitors: 0 };
-    }
+    res.json(db.stats || { visits: 0, waClicks: {} });
+});
 
-    db.stats.visitors += 1; // Tambah 1 pengunjung
+app.post('/stats/visit', async (req, res) => {
+    const db = await readDB();
+    if (!db.stats) db.stats = { visits: 0, waClicks: {} };
+    if (!db.stats.visits) db.stats.visits = 0;
+    db.stats.visits += 1;
     await writeDB(db);
-
-    res.json({ visitors: db.stats.visitors });
+    res.json({ success: true });
 });
 
-// 10. Endpoint untuk Mengambil Jumlah Pengunjung (Tanpa menambah)
-app.get('/visit', async (req, res) => {
-    const db = await readDB();
-    const count = db.stats ? db.stats.visitors : 0;
-    res.json({ visitors: count });
-});
-
-// 11. Endpoint untuk Mencatat Klik WhatsApp per UMKM
-app.post('/umkms/:id/click-wa', async (req, res) => {
+app.post('/stats/wa-click/:id', async (req, res) => {
     const { id } = req.params;
     const db = await readDB();
-
-    const umkmIndex = db.umkms.findIndex((u) => u.id === id);
-
-    if (umkmIndex !== -1) {
-        // Jika belum ada field waClicks, set jadi 0 dulu
-        if (!db.umkms[umkmIndex].waClicks) {
-            db.umkms[umkmIndex].waClicks = 0;
-        }
-
-        db.umkms[umkmIndex].waClicks += 1;
-        await writeDB(db);
-        
-        res.json({ 
-            success: true, 
-            clicks: db.umkms[umkmIndex].waClicks, 
-            message: 'Klik WA tercatat' 
-        });
-    } else {
-        res.status(404).json({ success: false, message: 'UMKM tidak ditemukan' });
-    }
+    if (!db.stats) db.stats = { visits: 0, waClicks: {} };
+    if (!db.stats.waClicks) db.stats.waClicks = {};
+    if (!db.stats.waClicks[id]) db.stats.waClicks[id] = 0;
+    db.stats.waClicks[id] += 1;
+    await writeDB(db);
+    res.json({ success: true });
 });
 
-// --- Menjalankan Server ---
 app.listen(PORT, () => {
-    console.log(`Server backend berjalan di http://localhost:${PORT}`);
+    console.log(`Server berjalan di http://localhost:${PORT}`);
 });

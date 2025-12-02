@@ -1,7 +1,4 @@
 {
-  "stats": {
-    "visitors": 235
-  },
   "admins": [
     {
       "id": "1",
@@ -12,26 +9,112 @@
   "products": [],
   "umkms": [
     {
-      "id": "2",
-      "name": "UMKM Baru Dengan Peta",
-      "specialty": "Kerajinan",
-      "description": "Deskripsi lain...",
-      "phone": "0813...",
-      "email": "email2@example.com",
-      "image": null,
-      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9",
-      "waClicks": 0
+      "name": "Apotek Sabah Balau",
+      "specialty": "Kesehatan",
+      "description": "Apotek Sabah Balau menjual berbagai macam obat",
+      "phone": "085377708285",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "https://maps.app.goo.gl/3m5pZnvSUUb818Yt6",
+      "image": "https://lh3.googleusercontent.com/p/AF1QipONiyUVjJYHoCp2DFam_zBn_1d5URF8nqwKSAq8=w426-h240-k-no",
+      "id": "1762946220027"
     },
     {
-      "name": "Apotek Sabah Balau",
-      "specialty": "Obat-obatan",
-      "description": "Menjual obat obatan",
-      "phone": "081200918921",
-      "email": "sabahbalau@apotek.com",
-      "image": null,
-      "mapSrcUrl": "https://maps.app.goo.gl/dLLufArz5fte27Qi9",
-      "id": "1762940945127",
-      "waClicks": 0
+      "id": "1763905437956",
+      "name": "Berkah Elektrik",
+      "specialty": "Alat Elektronik",
+      "description": "Menyediakan alat-alat elektronik",
+      "phone": "082281012220",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "https://maps.app.goo.gl/FWFk7f27xmBkhJGSA",
+      "image": "http://localhost:3000/uploads/1763948637417.png"
+    },
+    {
+      "id": "1763905804063",
+      "name": "Toko Karnia",
+      "specialty": "/",
+      "description": "/",
+      "phone": "089505241177",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763949579446.jpg"
+    },
+    {
+      "id": "1763905841602",
+      "name": "Cahaya Cell",
+      "specialty": "/",
+      "description": "/",
+      "phone": " 085896961230",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763948808854.jpeg"
+    },
+    {
+      "id": "1763906006864",
+      "name": "Toko Tutur",
+      "specialty": "/",
+      "description": "/",
+      "phone": "0895385800666",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763949567230.jpg"
+    },
+    {
+      "id": "1763906037916",
+      "name": "Toko Bangunan GTR 212",
+      "specialty": "Bahan Bangunan",
+      "description": "/",
+      "phone": " 082280851153",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763948735774.jpeg"
+    },
+    {
+      "id": "1763906068798",
+      "name": "Toko Depo Bunga",
+      "specialty": "Bunga",
+      "description": "/",
+      "phone": "081273603304",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763949353058.jpg"
+    },
+    {
+      "id": "1763906104430",
+      "name": "Toko Muthia",
+      "specialty": "/",
+      "description": "/",
+      "phone": "085273641987",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763948989788.jpeg"
+    },
+    {
+      "id": "1763906141665",
+      "name": "Toko Perabot Mas Sogol",
+      "specialty": "Perabotan",
+      "description": "/",
+      "phone": "081271387244 ",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763949399200.jpg"
+    },
+    {
+      "id": "1763906169883",
+      "name": "Syomai Tugu Perahu Aswin",
+      "specialty": "Kuliner",
+      "description": "/",
+      "phone": "/",
+      "address": "Desa Sabah Balau",
+      "mapSrcUrl": "/",
+      "image": "http://localhost:3000/uploads/1763949547915.jpeg"
     }
-  ]
+  ],
+  "stats": {
+    "visits": 17,
+    "waClicks": {
+      "1763704669823": 1,
+      "1763705005258": 3,
+      "1762946220027": 6
+    }
+  }
 }
