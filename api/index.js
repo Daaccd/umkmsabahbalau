@@ -4,8 +4,6 @@ const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
-
-// --- IMPORT LIBRARY ---
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
@@ -15,17 +13,26 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- 1. KONEKSI DATABASE (Anti-Double Connect) ---
-if (mongoose.connection.readyState === 0) {
-    mongoose.connect(process.env.MONGO_URI)
-        .then(() => console.log('MongoDB Terkoneksi'))
-        .catch(err => console.error('MongoDB Gagal:', err));
-}
+// --- 1. KONEKSI DATABASE (LEBIH STABIL) ---
+const connectDB = async () => {
+    if (mongoose.connection.readyState >= 1) return;
+    try {
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("MongoDB Terkoneksi");
+    } catch (error) {
+        console.error("Gagal Konek MongoDB:", error);
+    }
+};
 
-// --- 2. KONFIGURASI CLOUDINARY (STRICT MODE) ---
-// Cek apakah password ada di Vercel?
-if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.error("FATAL ERROR: Environment Variables Cloudinary KOSONG/TIDAK TERBACA!");
+// Middleware: Pastikan DB connect di setiap request
+app.use(async (req, res, next) => {
+    await connectDB();
+    next();
+});
+
+// --- 2. CONFIG CLOUDINARY ---
+if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    console.error("WARNING: Config Cloudinary Kosong/Salah!");
 }
 
 cloudinary.config({
@@ -34,7 +41,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Setup Storage Langsung (Tanpa Try-Catch agar Error terlihat)
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -42,11 +48,10 @@ const storage = new CloudinaryStorage({
         allowed_formats: ['jpg', 'png', 'jpeg'],
     },
 });
-
 const upload = multer({ storage: storage });
 
-// --- 3. DATABASE MODELS (Anti-Overwrite) ---
-const UmkmSchema = new mongoose.Schema({
+// --- 3. DATABASE MODELS ---
+const Umkm = mongoose.models.Umkm || mongoose.model('Umkm', new mongoose.Schema({
     id: { type: String, default: () => Date.now().toString() },
     name: String,
     specialty: String,
@@ -55,34 +60,28 @@ const UmkmSchema = new mongoose.Schema({
     address: String,
     mapSrcUrl: String,
     image: String
-});
-const Umkm = mongoose.models.Umkm || mongoose.model('Umkm', UmkmSchema);
+}));
 
-const AdminSchema = new mongoose.Schema({
+const Admin = mongoose.models.Admin || mongoose.model('Admin', new mongoose.Schema({
     username: { type: String, required: true },
     password: { type: String, required: true }
-});
-const Admin = mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
+}));
 
-const StatSchema = new mongoose.Schema({
+const Stat = mongoose.models.Stat || mongoose.model('Stat', new mongoose.Schema({
     name: { type: String, default: 'main_stats' },
     visits: { type: Number, default: 0 },
     waClicks: { type: Map, of: Number, default: {} }
-});
-const Stat = mongoose.models.Stat || mongoose.model('Stat', StatSchema);
+}));
 
-// --- 4. STATIC FILES (Frontend) ---
+// --- 4. STATIC FILES ---
 app.use(express.static(path.join(__dirname, '../public')));
 
-// --- 5. MIDDLEWARE ERROR UPLOAD ---
+// --- 5. UPLOAD HANDLER (Error Checker) ---
 const uploadHandler = (req, res, next) => {
     upload.single('imageFile')(req, res, (err) => {
         if (err) {
-            console.error("UPLOAD ERROR (Cloudinary):", err);
-            return res.status(500).json({ 
-                message: "Gagal Upload Gambar. Cek Config Cloudinary di Vercel.", 
-                error: err.message 
-            });
+            console.error("UPLOAD ERROR:", err);
+            return res.status(500).json({ message: "Gagal Upload (Cek Env Vercel)", error: err.message });
         }
         next();
     });
@@ -90,35 +89,49 @@ const uploadHandler = (req, res, next) => {
 
 // --- 6. ENDPOINTS ---
 
-// Setup Admin
+// Setup Admin (Akses ini jika tidak bisa login)
 app.get('/setup-admin', async (req, res) => {
     try {
         const exist = await Admin.findOne({ username: 'admin' });
         if (!exist) {
             await Admin.create({ username: 'admin', password: 'admin123' });
-            res.send('<h1>SUKSES</h1>Admin dibuat: admin / admin123<br><a href="/">Kembali</a>');
+            res.send('<h1>SUKSES</h1>Admin dibuat: admin / admin123');
         } else {
-            res.send('<h1>Admin Sudah Ada</h1><a href="/">Kembali</a>');
+            res.send('<h1>Admin Sudah Ada</h1>');
         }
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// Get Data
+// LOGIN (DENGAN PENGAMAN)
+app.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        console.log("Login attempt:", username); // Cek di Logs Vercel
+
+        const admin = await Admin.findOne({ username, password });
+        if (admin) {
+            res.json({ success: true });
+        } else {
+            res.status(401).json({ success: false, message: 'Username/Password Salah' });
+        }
+    } catch (error) {
+        console.error("LOGIN ERROR:", error);
+        res.status(500).json({ success: false, message: 'Server Error: ' + error.message });
+    }
+});
+
+// UMKM Endpoints
 app.get('/umkms', async (req, res) => {
     const umkms = await Umkm.find();
     res.json(umkms);
 });
 
-// Tambah Data (Pakai Upload Handler)
 app.post('/umkms', uploadHandler, async (req, res) => {
     try {
         let imageUrl = req.body.imageUrl || null;
-        // Ambil URL dari Cloudinary jika ada file
-        if (req.file && req.file.path) {
-            imageUrl = req.file.path;
-        }
+        if (req.file && req.file.path) imageUrl = req.file.path;
 
-        const newUMKM = new Umkm({
+        await Umkm.create({
             name: req.body.name,
             specialty: req.body.specialty,
             description: req.body.description,
@@ -127,15 +140,10 @@ app.post('/umkms', uploadHandler, async (req, res) => {
             mapSrcUrl: req.body.mapSrcUrl,
             image: imageUrl
         });
-        await newUMKM.save();
-        res.status(201).json(newUMKM);
-    } catch (error) {
-        console.error("Database Error:", error);
-        res.status(500).json({ message: "Gagal simpan data" });
-    }
+        res.status(201).json({ success: true });
+    } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
-// Edit Data
 app.put('/umkms/:id', uploadHandler, async (req, res) => {
     try {
         const oldData = await Umkm.findOne({ id: req.params.id });
@@ -155,24 +163,12 @@ app.put('/umkms/:id', uploadHandler, async (req, res) => {
 
         await oldData.save();
         res.json({ success: true });
-    } catch (error) {
-        console.error("Update Error:", error);
-        res.status(500).json({ message: "Gagal update" });
-    }
+    } catch (e) { res.status(500).json({ message: e.message }); }
 });
 
-// Hapus Data
 app.delete('/umkms/:id', async (req, res) => {
     await Umkm.deleteOne({ id: req.params.id });
     res.json({ success: true });
-});
-
-// Login
-app.post('/login', async (req, res) => {
-    const { username, password } = req.body;
-    const admin = await Admin.findOne({ username, password });
-    if (admin) res.json({ success: true });
-    else res.status(401).json({ success: false });
 });
 
 // Stats
@@ -183,7 +179,6 @@ app.get('/stats', async (req, res) => {
         res.json(stats);
     } catch (e) { res.json({ visits: 0 }); }
 });
-
 app.post('/stats/visit', async (req, res) => {
     try {
         let stats = await Stat.findOne({ name: 'main_stats' });
@@ -191,9 +186,8 @@ app.post('/stats/visit', async (req, res) => {
         stats.visits += 1;
         await stats.save();
         res.json({ success: true });
-    } catch (e) { res.json({ success: false }); }
+    } catch (e) { res.json({}); }
 });
-
 app.post('/stats/wa-click/:id', async (req, res) => {
     try {
         let stats = await Stat.findOne({ name: 'main_stats' });
@@ -202,10 +196,10 @@ app.post('/stats/wa-click/:id', async (req, res) => {
         stats.waClicks.set(req.params.id, currentClicks + 1);
         await stats.save();
         res.json({ success: true });
-    } catch (e) { res.json({ success: false }); }
+    } catch (e) { res.json({}); }
 });
 
-// Route Utama (Support Express 5)
+// Route Utama
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
