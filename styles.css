@@ -2,7 +2,7 @@
     margin: 0; 
     padding: 0; 
     box-sizing: border-box; 
-    font-family: Arial, sans-serif; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
 }
 
 body { 
@@ -18,7 +18,7 @@ body {
     padding: 0 15px; 
 }
 
-/* Header */
+/* --- Header --- */
 header { 
     background: #2c5e1a; 
     color: white; 
@@ -41,22 +41,16 @@ header {
     gap: 10px; 
 }
 
-.logo-icon {
-    font-size: 1.8rem;
-}
-
-.logo h1 { 
-    font-size: 1.3rem; 
-}
+.logo-icon { font-size: 1.8rem; }
+.logo h1 { font-size: 1.3rem; }
 
 nav ul { 
     display: flex; 
     list-style: none; 
+    align-items: center;
 }
 
-nav li { 
-    margin-left: 20px; 
-}
+nav li { margin-left: 20px; }
 
 nav a { 
     color: white; 
@@ -65,11 +59,18 @@ nav a {
     transition: color 0.3s;
 }
 
-nav a:hover {
-    color: #c8e6c9;
+nav a:hover { color: #c8e6c9; }
+
+.admin-badge {
+    background: #ff9800;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-left: 10px;
 }
 
-/* Hero */
+/* --- Hero Section --- */
 .hero { 
     background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), #2c5e1a; 
     color: white; 
@@ -77,16 +78,10 @@ nav a:hover {
     padding: 4rem 0; 
 }
 
-.hero h2 { 
-    font-size: 2rem; 
-    margin-bottom: 1rem; 
-}
+.hero h2 { font-size: 2rem; margin-bottom: 1rem; }
+.hero p { max-width: 600px; margin: 0 auto; }
 
-.hero p {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
+/* --- Buttons --- */
 .btn { 
     display: inline-block; 
     background: #ff9800; 
@@ -97,11 +92,10 @@ nav a:hover {
     font-weight: bold; 
     margin-top: 1rem;
     transition: background 0.3s;
+    border: none;
+    cursor: pointer;
 }
-
-.btn:hover {
-    background: #e68900;
-}
+.btn:hover { background: #e68900; }
 
 .btn-small {
     display: inline-block;
@@ -111,18 +105,22 @@ nav a:hover {
     border-radius: 4px;
     text-decoration: none;
     font-size: 0.9rem;
-    margin-top: 10px;
     transition: background 0.3s;
+    border: none;
+    cursor: pointer;
+    flex-grow: 1; /* Agar rata di mobile */
+    text-align: center;
 }
+.btn-small:hover { background: #388e3c; }
 
-.btn-small:hover {
-    background: #388e3c;
-}
+.btn-whatsapp { background-color: #25D366; }
+.btn-whatsapp:hover { background-color: #128C7E; }
 
-/* Sections */
-section { 
-    padding: 3rem 0; 
-}
+.btn-secondary { background: #6c757d; }
+.btn-secondary:hover { background: #5a6268; }
+
+/* --- Sections --- */
+section { padding: 3rem 0; }
 
 .section-title { 
     text-align: center; 
@@ -137,55 +135,12 @@ section {
     display: inline-block; 
 }
 
-/* Products */
-.products-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); 
-    gap: 20px; 
-}
-
-.product-card { 
-    background: white; 
-    border-radius: 8px; 
-    overflow: hidden; 
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-
-.product-card:hover {
-    transform: translateY(-5px);
-}
-
-.product-img { 
-    height: 160px; 
-    background: #e0e0e0; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    color: #666; 
-}
-
-.product-info { 
-    padding: 15px; 
-}
-
-.product-info h3 {
-    color: #2c5e1a;
-    margin-bottom: 8px;
-}
-
-.product-price { 
-    font-weight: bold; 
-    color: #4caf50; 
-    margin: 10px 0; 
-    font-size: 1.1rem;
-}
-
-/* UMKM Profiles */
+/* --- UMKM Cards --- */
 .umkm-profiles { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 25px; 
+    margin-bottom: 2rem;
 }
 
 .umkm-card { 
@@ -194,11 +149,10 @@ section {
     overflow: hidden; 
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
     transition: transform 0.3s;
+    position: relative; /* Wajib untuk posisi tombol admin */
 }
 
-.umkm-card:hover {
-    transform: translateY(-5px);
-}
+.umkm-card:hover { transform: translateY(-5px); }
 
 .umkm-img { 
     height: 160px; 
@@ -209,20 +163,9 @@ section {
     color: #666; 
 }
 
-.umkm-info { 
-    padding: 15px; 
-}
-
-.umkm-info h3 {
-    color: #2c5e1a;
-    margin-bottom: 8px;
-}
-
-.specialty {
-    color: #4caf50;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
+.umkm-info { padding: 15px; }
+.umkm-info h3 { color: #2c5e1a; margin-bottom: 8px; }
+.specialty { color: #4caf50; font-weight: bold; margin-bottom: 10px; }
 
 .contact-info {
     margin-top: 15px;
@@ -230,23 +173,136 @@ section {
     border-top: 1px solid #eee;
 }
 
-/* Location */
-.map-container { 
-    height: 300px; 
-    background: #e0e0e0; 
-    border-radius: 8px; 
-    display: flex; 
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* --- Admin Actions (Edit & Delete Buttons) --- */
+.admin-actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 5px;
+    z-index: 20;
+}
+
+.edit-btn, .delete-btn {
+    color: white;
+    border: none;
+    border-radius: 4px;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+}
+
+.edit-btn { background: rgba(0, 123, 255, 0.9); font-size: 1rem; }
+.edit-btn:hover { background: #0056b3; transform: scale(1.1); }
+
+.delete-btn { background: rgba(220, 53, 69, 0.9); font-size: 1.4rem; }
+.delete-btn:hover { background: #c82333; transform: scale(1.1); }
+
+/* --- Forms & Modal (Fixed Scaling) --- */
+.form-container {
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    margin-bottom: 2rem;
+}
+
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+
+.form-group input, .form-group textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+}
+.form-group textarea { min-height: 80px; resize: vertical; }
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+/* Modal Style */
+.modal {
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.5); 
+    z-index: 1000; 
     align-items: center; 
-    justify-content: center; 
-    color: #666; 
-    margin-bottom: 20px;
+    justify-content: center;
+    padding: 15px; /* Padding agar tidak nempel layar HP */
 }
 
-.location-info {
+.modal-content {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 450px; /* Lebar ideal */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    
+    /* --- PERBAIKAN SCALING DI SINI --- */
+    max-height: 90vh; /* Maksimal tinggi 90% dari layar */
+    overflow-y: auto; /* Munculkan scroll jika konten terlalu panjang */
+    scrollbar-width: thin; /* Scrollbar tipis */
+}
+
+.modal h2 { text-align: center; margin-bottom: 20px; color: #2c5e1a; }
+
+.modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+/* --- Stats & Badges --- */
+.stat-counter {
     text-align: center;
+    margin: 20px 0;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    display: inline-block;
+}
+.stat-counter p { color: #ff9800; font-weight: bold; font-size: 1.1rem; margin: 0; }
+
+.click-badge {
+    background-color: #e8f5e9;
+    color: #2c5e1a;
+    font-size: 0.85rem;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+    border: 1px solid #c8e6c9;
+    margin-left: 5px;
 }
 
-/* Contact */
+/* --- Map & Contact --- */
+.map-container iframe { width: 100%; display: block; }
+.location-info { text-align: center; padding-top: 20px; }
+
 .contact-content {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -255,85 +311,41 @@ section {
     margin: 0 auto;
 }
 
-.contact-info, .contact-hours {
+.contact-info-card, .contact-hours {
     background: white;
     padding: 25px;
     border-radius: 8px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-.contact-info h3, .contact-hours h3 {
+.contact-info-card h3, .contact-hours h3 {
     color: #2c5e1a;
     margin-bottom: 15px;
     padding-bottom: 10px;
     border-bottom: 2px solid #4caf50;
 }
 
-.contact-detail p, .hours-detail p {
-    margin-bottom: 10px;
-}
-
-/* Footer */
-footer { 
-    background: #2c5e1a; 
-    color: white; 
-    padding: 2rem 0 1rem; 
-}
-
+/* --- Footer --- */
+footer { background: #2c5e1a; color: white; padding: 2rem 0 1rem; }
 .footer-content { 
     display: grid; 
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
     gap: 20px; 
     margin-bottom: 1.5rem; 
 }
+.footer-section h3 { margin-bottom: 15px; font-size: 1.2rem; }
+.footer-section p, .footer-section a { color: #e0e0e0; margin-bottom: 8px; display: block; text-decoration: none; }
+.footer-section a:hover { color: white; }
+.copyright { text-align: center; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); color: #e0e0e0; font-size: 0.9rem; }
 
-.footer-section h3 {
-    margin-bottom: 15px;
-    font-size: 1.2rem;
-}
-
-.footer-section p, .footer-section a {
-    color: #e0e0e0;
-    margin-bottom: 8px;
-    display: block;
-    text-decoration: none;
-    transition: color 0.3s;
-}
-
-.footer-section a:hover {
-    color: white;
-}
-
-.copyright { 
-    text-align: center; 
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.1);
-    color: #e0e0e0;
-    font-size: 0.9rem;
-}
-
-/* Responsive */
+/* --- Responsive Mobile --- */
 @media (max-width: 768px) {
-    .header-content { 
-        flex-direction: column; 
-        text-align: center; 
-    }
+    .header-content { flex-direction: column; text-align: center; }
+    nav ul { margin-top: 10px; flex-wrap: wrap; justify-content: center; }
+    nav li { margin: 5px 10px; }
+    .form-row { grid-template-columns: 1fr; }
+    .contact-content { grid-template-columns: 1fr; }
     
-    nav ul { 
-        margin-top: 10px; 
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    nav li { 
-        margin: 5px 10px; 
-    }
-    
-    .hero h2 {
-        font-size: 1.7rem;
-    }
-    
-    .contact-content {
-        grid-template-columns: 1fr;
-    }
+    /* Pastikan modal tidak terlalu lebar di HP */
+    .modal-content { width: 95%; padding: 20px; }
 }
