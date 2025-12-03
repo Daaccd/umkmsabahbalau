@@ -1,11 +1,15 @@
-require('dotenv').config(); // Load .env
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// --- PERBAIKAN IMPORT CLOUDINARY STORAGE ---
+const multerStorageCloudinary = require('multer-storage-cloudinary');
+// Cek apakah library exportnya berbentuk object atau langsung class
+const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -16,12 +20,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // --- 1. KONEKSI DATABASE & CONFIG ---
 
-// Koneksi ke MongoDB
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Sukses terkoneksi ke MongoDB'))
     .catch(err => console.error('Gagal konek MongoDB:', err));
 
-// Config Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -32,17 +34,17 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'umkm-sabah-balau', // Nama folder di Cloudinary
+        folder: 'umkm-sabah-balau',
         allowed_formats: ['jpg', 'png', 'jpeg'],
     },
 });
+
 const upload = multer({ storage: storage });
 
-// --- 2. DATABASE SCHEMA (Model Data) ---
+// --- 2. DATABASE SCHEMA ---
 
-// Schema UMKM (mirip struktur db.json lama)
 const UmkmSchema = new mongoose.Schema({
-    id: { type: String, default: () => Date.now().toString() }, // ID manual agar kompatibel frontend
+    id: { type: String, default: () => Date.now().toString() },
     name: String,
     specialty: String,
     description: String,
@@ -53,30 +55,28 @@ const UmkmSchema = new mongoose.Schema({
 });
 const Umkm = mongoose.model('Umkm', UmkmSchema);
 
-// Schema Admin
 const AdminSchema = new mongoose.Schema({
     username: { type: String, required: true },
-    password: { type: String, required: true } // Di real app, password harus di-hash!
+    password: { type: String, required: true }
 });
 const Admin = mongoose.model('Admin', AdminSchema);
 
-// Schema Stats
 const StatSchema = new mongoose.Schema({
-    name: { type: String, default: 'main_stats' }, // Penanda
+    name: { type: String, default: 'main_stats' },
     visits: { type: Number, default: 0 },
-    waClicks: { type: Map, of: Number, default: {} } // Map object untuk klik WA
+    waClicks: { type: Map, of: Number, default: {} }
 });
 const Stat = mongoose.model('Stat', StatSchema);
 
 // --- 3. ENDPOINTS ---
 
-// Melayani file statis (Frontend)
+// PENTING: Serve file statis (Frontend)
 app.use(express.static(__dirname)); 
-// ATAU jika file HTML ada di root:
+
+// Route Halaman Utama
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
-
 
 // GET Semua UMKM
 app.get('/umkms', async (req, res) => {
@@ -92,8 +92,6 @@ app.get('/umkms', async (req, res) => {
 app.post('/umkms', upload.single('imageFile'), async (req, res) => {
     try {
         let imageUrl = req.body.imageUrl || null;
-        
-        // Jika ada file upload, ambil URL dari Cloudinary
         if (req.file && req.file.path) {
             imageUrl = req.file.path;
         }
@@ -122,19 +120,15 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
         const { id } = req.params;
         const oldData = await Umkm.findOne({ id: id });
 
-        if (!oldData) {
-            return res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
-        }
+        if (!oldData) return res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
 
         let finalImage = oldData.image; 
-
         if (req.file && req.file.path) {
-            finalImage = req.file.path; // Update foto baru dari Cloudinary
+            finalImage = req.file.path;
         } else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") {
-            finalImage = req.body.imageUrl; // Update URL manual
+            finalImage = req.body.imageUrl;
         }
 
-        // Update data
         oldData.name = req.body.name;
         oldData.specialty = req.body.specialty;
         oldData.description = req.body.description;
@@ -145,9 +139,7 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
 
         await oldData.save();
         res.json({ success: true, message: 'UMKM berhasil diupdate.' });
-
     } catch (error) {
-        console.error(error);
         res.status(500).json({ message: "Gagal update data" });
     }
 });
@@ -162,22 +154,18 @@ app.delete('/umkms/:id', async (req, res) => {
     }
 });
 
-// LOGIN (Cek Database MongoDB)
+// LOGIN
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    try {
-        const admin = await Admin.findOne({ username, password });
-        if (admin) {
-            res.json({ success: true, message: 'Login berhasil!' });
-        } else {
-            res.status(401).json({ success: false, message: 'Salah username/password' });
-        }
-    } catch (error) {
-        res.status(500).json({ message: 'Error server' });
+    const admin = await Admin.findOne({ username, password });
+    if (admin) {
+        res.json({ success: true, message: 'Login berhasil!' });
+    } else {
+        res.status(401).json({ success: false, message: 'Salah username/password' });
     }
 });
 
-// Endpoint Sementara untuk Buat Admin (Hapus nanti jika sudah deploy)
+// SETUP ADMIN (Akses link ini sekali saja: /setup-admin)
 app.get('/setup-admin', async (req, res) => {
     const exist = await Admin.findOne({ username: 'admin' });
     if (!exist) {
@@ -198,7 +186,6 @@ app.get('/stats', async (req, res) => {
 app.post('/stats/visit', async (req, res) => {
     let stats = await Stat.findOne({ name: 'main_stats' });
     if (!stats) stats = await Stat.create({ name: 'main_stats' });
-    
     stats.visits += 1;
     await stats.save();
     res.json({ success: true });
@@ -208,19 +195,14 @@ app.post('/stats/wa-click/:id', async (req, res) => {
     const { id } = req.params;
     let stats = await Stat.findOne({ name: 'main_stats' });
     if (!stats) stats = await Stat.create({ name: 'main_stats' });
-
-    // Update Map
     const currentClicks = stats.waClicks.get(id) || 0;
     stats.waClicks.set(id, currentClicks + 1);
-    
     await stats.save();
     res.json({ success: true });
 });
 
-// Export untuk Vercel
 module.exports = app;
 
-// Jalankan lokal
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server berjalan di http://localhost:${PORT}`);
