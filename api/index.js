@@ -14,13 +14,32 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- KONEKSI DATABASE ---
-if (mongoose.connection.readyState === 0) {
-    mongoose.connect(process.env.MONGO_URI)
-        .then(() => console.log('Sukses terkoneksi ke MongoDB'))
-        .catch(err => console.error('Gagal konek MongoDB:', err));
-}
+// --- FUNGSI KONEKSI DATABASE (LEBIH STABIL) ---
+// Kita buat fungsi khusus untuk memastikan DB connect sebelum request diproses
+const connectDB = async () => {
+    try {
+        if (mongoose.connection.readyState === 1) {
+            return; // Sudah konek, lanjut
+        }
+        await mongoose.connect(process.env.MONGO_URI);
+        console.log("MongoDB Terkoneksi Baru");
+    } catch (error) {
+        console.error("Gagal Konek MongoDB:", error);
+        throw new Error("Database Connection Failed");
+    }
+};
 
+// Middleware: Pastikan DB connect di SETIAP request
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        res.status(500).json({ message: "Database Error", error: error.message });
+    }
+});
+
+// --- CONFIG CLOUDINARY ---
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -36,7 +55,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- DEFINISI MODEL (Mencegah Overwrite) ---
+// --- MODEL DATABASE ---
 const UmkmSchema = new mongoose.Schema({
     id: { type: String, default: () => Date.now().toString() },
     name: String,
@@ -78,16 +97,39 @@ app.get('/setup-admin', async (req, res) => {
             res.send('<h1>Admin Sudah Ada</h1><p>Silakan login dengan username: <b>admin</b></p><br><a href="/">Kembali ke Home</a>');
         }
     } catch (error) {
+        console.error("Error Setup Admin:", error); // Log Error agar terlihat di Vercel
         res.status(500).send('Error: ' + error.message);
     }
 });
 
-// 2. UMKM Routes
+// 2. Login (DIPERBAIKI LOGGINGNYA)
+app.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        
+        // Debugging: Cek apakah data sampai
+        console.log("Mencoba login:", username); 
+
+        const admin = await Admin.findOne({ username, password });
+        
+        if (admin) {
+            res.json({ success: true, message: 'Login berhasil!' });
+        } else {
+            res.status(401).json({ success: false, message: 'Salah username/password' });
+        }
+    } catch (error) {
+        // PENTING: Log error ke console Vercel agar kita tahu penyebabnya
+        console.error("LOGIN ERROR:", error);
+        res.status(500).json({ message: 'Error server', detail: error.message });
+    }
+});
+
+// 3. Data UMKM
 app.get('/umkms', async (req, res) => {
     try {
         const umkms = await Umkm.find();
         res.json(umkms);
-    } catch (error) { res.status(500).json({ error: error.message }); }
+    } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
 app.post('/umkms', upload.single('imageFile'), async (req, res) => {
@@ -106,7 +148,10 @@ app.post('/umkms', upload.single('imageFile'), async (req, res) => {
         });
         await newUMKM.save();
         res.status(201).json(newUMKM);
-    } catch (error) { res.status(500).json({ message: "Gagal menyimpan" }); }
+    } catch (error) {
+        console.error("Error Tambah UMKM:", error); // Log Error
+        res.status(500).json({ message: "Gagal menyimpan data" });
+    }
 });
 
 app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
@@ -128,7 +173,10 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
 
         await oldData.save();
         res.json({ success: true });
-    } catch (error) { res.status(500).json({ message: "Gagal update" }); }
+    } catch (error) { 
+        console.error("Error Edit UMKM:", error);
+        res.status(500).json({ message: "Gagal update" }); 
+    }
 });
 
 app.delete('/umkms/:id', async (req, res) => {
@@ -136,16 +184,6 @@ app.delete('/umkms/:id', async (req, res) => {
         await Umkm.deleteOne({ id: req.params.id });
         res.json({ success: true });
     } catch (error) { res.status(500).json({ message: "Gagal hapus" }); }
-});
-
-// 3. Login
-app.post('/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const admin = await Admin.findOne({ username, password });
-        if (admin) res.json({ success: true, message: 'Login berhasil!' });
-        else res.status(401).json({ success: false, message: 'Salah username/password' });
-    } catch (error) { res.status(500).json({ message: 'Error server' }); }
 });
 
 // 4. Stats
@@ -176,8 +214,7 @@ app.post('/stats/wa-click/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// --- PERBAIKAN DI SINI (Express 5 Route) ---
-// Ganti '*' menjadi /(.*)/ agar valid di Express 5
+// Route Utama (Express 5)
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
