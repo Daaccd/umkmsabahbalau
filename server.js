@@ -5,7 +5,10 @@ const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
+
+// --- PERBAIKAN IMPORT CLOUDINARY STORAGE ---
 const multerStorageCloudinary = require('multer-storage-cloudinary');
+// Cek apakah library exportnya berbentuk object atau langsung class
 const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
 
 const app = express();
@@ -15,7 +18,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- KONEKSI DATABASE ---
+// --- 1. KONEKSI DATABASE & CONFIG ---
+
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('Sukses terkoneksi ke MongoDB'))
     .catch(err => console.error('Gagal konek MongoDB:', err));
@@ -26,6 +30,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Config Upload ke Cloudinary
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -33,9 +38,11 @@ const storage = new CloudinaryStorage({
         allowed_formats: ['jpg', 'png', 'jpeg'],
     },
 });
+
 const upload = multer({ storage: storage });
 
-// --- SCHEMA DATABASE ---
+// --- 2. DATABASE SCHEMA ---
+
 const UmkmSchema = new mongoose.Schema({
     id: { type: String, default: () => Date.now().toString() },
     name: String,
@@ -61,28 +68,18 @@ const StatSchema = new mongoose.Schema({
 });
 const Stat = mongoose.model('Stat', StatSchema);
 
-// --- KONFIGURASI STATIC FILES (PENTING) ---
-// Melayani file frontend dari folder 'public'
+// --- 3. ENDPOINTS ---
+
+// PENTING: Serve file statis (Frontend)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// --- ENDPOINTS ---
-
-// 1. Setup Admin (PINTU BELAKANG - Akses ini untuk buat admin)
-app.get('/setup-admin', async (req, res) => {
-    try {
-        const exist = await Admin.findOne({ username: 'admin' });
-        if (!exist) {
-            await Admin.create({ username: 'admin', password: 'admin123' });
-            res.send('<h1>SUKSES!</h1><p>Admin berhasil dibuat.</p><p>Username: <b>admin</b></p><p>Password: <b>admin123</b></p><br><a href="/">Kembali ke Home</a>');
-        } else {
-            res.send('<h1>Admin Sudah Ada</h1><p>Silakan login dengan username: <b>admin</b></p><br><a href="/">Kembali ke Home</a>');
-        }
-    } catch (error) {
-        res.status(500).send('Error database: ' + error.message);
-    }
+// Route Halaman Utama
+app.get('/', (req, res) => {
+    // UBAH BARIS INI: Ambil index.html dari dalam folder 'public'
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// 2. Data UMKM
+// GET Semua UMKM
 app.get('/umkms', async (req, res) => {
     try {
         const umkms = await Umkm.find();
@@ -92,10 +89,13 @@ app.get('/umkms', async (req, res) => {
     }
 });
 
+// POST (Tambah) UMKM
 app.post('/umkms', upload.single('imageFile'), async (req, res) => {
     try {
         let imageUrl = req.body.imageUrl || null;
-        if (req.file && req.file.path) imageUrl = req.file.path;
+        if (req.file && req.file.path) {
+            imageUrl = req.file.path;
+        }
 
         const newUMKM = new Umkm({
             name: req.body.name,
@@ -106,21 +106,29 @@ app.post('/umkms', upload.single('imageFile'), async (req, res) => {
             mapSrcUrl: req.body.mapSrcUrl,
             image: imageUrl
         });
+
         await newUMKM.save();
         res.status(201).json(newUMKM);
     } catch (error) {
+        console.error(error);
         res.status(500).json({ message: "Gagal menyimpan data" });
     }
 });
 
+// PUT (Edit) UMKM
 app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
     try {
-        const oldData = await Umkm.findOne({ id: req.params.id });
+        const { id } = req.params;
+        const oldData = await Umkm.findOne({ id: id });
+
         if (!oldData) return res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
 
         let finalImage = oldData.image; 
-        if (req.file && req.file.path) finalImage = req.file.path;
-        else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") finalImage = req.body.imageUrl;
+        if (req.file && req.file.path) {
+            finalImage = req.file.path;
+        } else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") {
+            finalImage = req.body.imageUrl;
+        }
 
         oldData.name = req.body.name;
         oldData.specialty = req.body.specialty;
@@ -131,12 +139,13 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
         oldData.image = finalImage;
 
         await oldData.save();
-        res.json({ success: true });
+        res.json({ success: true, message: 'UMKM berhasil diupdate.' });
     } catch (error) {
         res.status(500).json({ message: "Gagal update data" });
     }
 });
 
+// DELETE UMKM
 app.delete('/umkms/:id', async (req, res) => {
     try {
         await Umkm.deleteOne({ id: req.params.id });
@@ -146,20 +155,35 @@ app.delete('/umkms/:id', async (req, res) => {
     }
 });
 
-// 3. Login
+// LOGIN
 app.post('/login', async (req, res) => {
     const { username, password } = req.body;
     const admin = await Admin.findOne({ username, password });
-    if (admin) res.json({ success: true, message: 'Login berhasil!' });
-    else res.status(401).json({ success: false, message: 'Salah username/password' });
+    if (admin) {
+        res.json({ success: true, message: 'Login berhasil!' });
+    } else {
+        res.status(401).json({ success: false, message: 'Salah username/password' });
+    }
 });
 
-// 4. Stats
+// SETUP ADMIN (Akses link ini sekali saja: /setup-admin)
+app.get('/setup-admin', async (req, res) => {
+    const exist = await Admin.findOne({ username: 'admin' });
+    if (!exist) {
+        await Admin.create({ username: 'admin', password: 'admin123' });
+        res.send('Admin dibuat: admin / admin123');
+    } else {
+        res.send('Admin sudah ada');
+    }
+});
+
+// STATS
 app.get('/stats', async (req, res) => {
     let stats = await Stat.findOne({ name: 'main_stats' });
     if (!stats) stats = await Stat.create({ name: 'main_stats' });
     res.json(stats);
 });
+
 app.post('/stats/visit', async (req, res) => {
     let stats = await Stat.findOne({ name: 'main_stats' });
     if (!stats) stats = await Stat.create({ name: 'main_stats' });
@@ -167,18 +191,15 @@ app.post('/stats/visit', async (req, res) => {
     await stats.save();
     res.json({ success: true });
 });
+
 app.post('/stats/wa-click/:id', async (req, res) => {
+    const { id } = req.params;
     let stats = await Stat.findOne({ name: 'main_stats' });
     if (!stats) stats = await Stat.create({ name: 'main_stats' });
-    const currentClicks = stats.waClicks.get(req.params.id) || 0;
-    stats.waClicks.set(req.params.id, currentClicks + 1);
+    const currentClicks = stats.waClicks.get(id) || 0;
+    stats.waClicks.set(id, currentClicks + 1);
     await stats.save();
     res.json({ success: true });
-});
-
-// 5. Route Utama (Harus paling bawah)
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 module.exports = app;
