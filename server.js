@@ -71,11 +71,12 @@ const Stat = mongoose.model('Stat', StatSchema);
 // --- 3. ENDPOINTS ---
 
 // PENTING: Serve file statis (Frontend)
-app.use(express.static(__dirname)); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Route Halaman Utama
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    // UBAH BARIS INI: Ambil index.html dari dalam folder 'public'
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // GET Semua UMKM
