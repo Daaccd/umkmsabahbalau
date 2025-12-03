@@ -5,12 +5,7 @@ const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
-
-// --- PERBAIKAN DI SINI (JURUS IMPORT AMAN) ---
-// Kita ambil library-nya dulu
-const multerStorageCloudinary = require('multer-storage-cloudinary');
-// Lalu kita cek: apakah dia ada di dalam properti .CloudinaryStorage atau langsung?
-const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
+const { Readable } = require('stream'); // Native Node.js stream
 
 const app = express();
 
@@ -45,17 +40,35 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Setup Storage dengan Import yang Sudah Diperbaiki
-const storage = new CloudinaryStorage({
-    cloudinary: cloudinary,
-    params: {
-        folder: 'umkm-sabah-balau',
-        allowed_formats: ['jpg', 'png', 'jpeg'],
-    },
-});
+// --- 3. SETUP MULTER (MEMORY STORAGE) ---
+// Simpan file di memory sementara (RAM), bukan di folder
+const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// --- 3. DATABASE MODELS ---
+// --- 4. FUNGSI HELPER UPLOAD (JURUS LANGSUNG) ---
+const uploadToCloudinary = (buffer) => {
+    return new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+            { 
+                folder: 'umkm-sabah-balau',
+                resource_type: 'auto' 
+            },
+            (error, result) => {
+                if (error) {
+                    console.error("Cloudinary Error:", error);
+                    reject(error);
+                } else {
+                    resolve(result);
+                }
+            }
+        );
+        // Konversi buffer ke stream agar bisa diupload
+        const stream = Readable.from(buffer);
+        stream.pipe(uploadStream);
+    });
+};
+
+// --- 5. MODELS ---
 const Umkm = mongoose.models.Umkm || mongoose.model('Umkm', new mongoose.Schema({
     id: { type: String, default: () => Date.now().toString() },
     name: String,
@@ -78,21 +91,10 @@ const Stat = mongoose.models.Stat || mongoose.model('Stat', new mongoose.Schema(
     waClicks: { type: Map, of: Number, default: {} }
 }));
 
-// --- 4. STATIC FILES ---
+// --- 6. STATIC FILES ---
 app.use(express.static(path.join(__dirname, '../public')));
 
-// --- 5. UPLOAD HANDLER ---
-const uploadHandler = (req, res, next) => {
-    upload.single('imageFile')(req, res, (err) => {
-        if (err) {
-            console.error("UPLOAD ERROR:", err);
-            return res.status(500).json({ message: "Gagal Upload", error: err.message });
-        }
-        next();
-    });
-};
-
-// --- 6. ENDPOINTS ---
+// --- 7. ENDPOINTS ---
 
 // Setup Admin
 app.get('/setup-admin', async (req, res) => {
@@ -119,16 +121,24 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// UMKM Endpoints
+// GET UMKM
 app.get('/umkms', async (req, res) => {
     const umkms = await Umkm.find();
     res.json(umkms);
 });
 
-app.post('/umkms', uploadHandler, async (req, res) => {
+// POST UMKM (Updated Logic)
+app.post('/umkms', upload.single('imageFile'), async (req, res) => {
     try {
         let imageUrl = req.body.imageUrl || null;
-        if (req.file && req.file.path) imageUrl = req.file.path;
+        
+        // Jika ada file diupload, kirim ke Cloudinary via Helper
+        if (req.file) {
+            console.log("Mengupload gambar ke Cloudinary...");
+            const uploadResult = await uploadToCloudinary(req.file.buffer);
+            imageUrl = uploadResult.secure_url; // Dapat URL dari Cloudinary
+            console.log("Upload Sukses:", imageUrl);
+        }
 
         await Umkm.create({
             name: req.body.name,
@@ -140,17 +150,28 @@ app.post('/umkms', uploadHandler, async (req, res) => {
             image: imageUrl
         });
         res.status(201).json({ success: true });
-    } catch (e) { res.status(500).json({ message: e.message }); }
+    } catch (e) {
+        console.error("Error Tambah Data:", e);
+        res.status(500).json({ message: "Gagal: " + e.message });
+    }
 });
 
-app.put('/umkms/:id', uploadHandler, async (req, res) => {
+// PUT UMKM (Updated Logic)
+app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
     try {
         const oldData = await Umkm.findOne({ id: req.params.id });
         if (!oldData) return res.status(404).json({ message: 'Not found' });
 
         let finalImage = oldData.image; 
-        if (req.file && req.file.path) finalImage = req.file.path;
-        else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") finalImage = req.body.imageUrl;
+        
+        // Cek jika ada file baru diupload
+        if (req.file) {
+            console.log("Mengupload gambar baru...");
+            const uploadResult = await uploadToCloudinary(req.file.buffer);
+            finalImage = uploadResult.secure_url;
+        } else if (req.body.imageUrl && req.body.imageUrl.trim() !== "") {
+            finalImage = req.body.imageUrl;
+        }
 
         oldData.name = req.body.name;
         oldData.specialty = req.body.specialty;
@@ -162,15 +183,18 @@ app.put('/umkms/:id', uploadHandler, async (req, res) => {
 
         await oldData.save();
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ message: e.message }); }
+    } catch (e) {
+        console.error("Error Edit Data:", e);
+        res.status(500).json({ message: e.message });
+    }
 });
 
+// Delete & Stats...
 app.delete('/umkms/:id', async (req, res) => {
     await Umkm.deleteOne({ id: req.params.id });
     res.json({ success: true });
 });
 
-// Stats
 app.get('/stats', async (req, res) => {
     try {
         let stats = await Stat.findOne({ name: 'main_stats' });
@@ -198,7 +222,6 @@ app.post('/stats/wa-click/:id', async (req, res) => {
     } catch (e) { res.json({}); }
 });
 
-// Route Utama (Express 5 Support)
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
