@@ -91,7 +91,7 @@ async function renderUMKMs() {
                     <h3>${umkm.name}</h3>
                     <span class="click-badge">📱 ${clickCount}</span>
                 </div>
-                <p class="specialty">Spesialisasi: ${umkm.specialty}</p>
+                <p class="specialty">Produk: ${umkm.specialty}</p>
                 <p>${umkm.description}</p>
                 <div class="contact-info">
                     <p><strong>Alamat:</strong> ${umkm.address || 'N/A'}</p>
