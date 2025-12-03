@@ -85,6 +85,21 @@ const Stat = mongoose.models.Stat || mongoose.model('Stat', StatSchema);
 app.use(express.static(path.join(__dirname, '../public')));
 
 // --- ENDPOINTS ---
+// Wrapper untuk menangkap error upload
+const uploadHandler = (req, res, next) => {
+    upload.single('imageFile')(req, res, (err) => {
+        if (err) {
+            console.error("Upload Error:", err);
+            // Tampilkan error spesifik ke frontend
+            return res.status(500).json({ 
+                message: "Gagal Upload Gambar", 
+                error: err.message,
+                detail: "Cek Config Cloudinary di Vercel / Ukuran File"
+            });
+        }
+        next();
+    });
+};
 
 // 1. Setup Admin
 app.get('/setup-admin', async (req, res) => {
@@ -132,7 +147,8 @@ app.get('/umkms', async (req, res) => {
     } catch (error) { res.status(500).json({ message: error.message }); }
 });
 
-app.post('/umkms', upload.single('imageFile'), async (req, res) => {
+// UPDATE: Endpoint Tambah UMKM (Pakai uploadHandler)
+app.post('/umkms', uploadHandler, async (req, res) => {
     try {
         let imageUrl = req.body.imageUrl || null;
         if (req.file && req.file.path) imageUrl = req.file.path;
@@ -149,15 +165,16 @@ app.post('/umkms', upload.single('imageFile'), async (req, res) => {
         await newUMKM.save();
         res.status(201).json(newUMKM);
     } catch (error) {
-        console.error("Error Tambah UMKM:", error); // Log Error
-        res.status(500).json({ message: "Gagal menyimpan data" });
+        console.error("Database Error:", error);
+        res.status(500).json({ message: "Gagal menyimpan ke Database", error: error.message });
     }
 });
 
-app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
+// UPDATE: Endpoint Edit UMKM (Pakai uploadHandler)
+app.put('/umkms/:id', uploadHandler, async (req, res) => {
     try {
         const oldData = await Umkm.findOne({ id: req.params.id });
-        if (!oldData) return res.status(404).json({ message: 'Not found' });
+        if (!oldData) return res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
 
         let finalImage = oldData.image; 
         if (req.file && req.file.path) finalImage = req.file.path;
@@ -173,9 +190,9 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
 
         await oldData.save();
         res.json({ success: true });
-    } catch (error) { 
-        console.error("Error Edit UMKM:", error);
-        res.status(500).json({ message: "Gagal update" }); 
+    } catch (error) {
+        console.error("Update Error:", error);
+        res.status(500).json({ message: "Gagal update data", error: error.message });
     }
 });
 
