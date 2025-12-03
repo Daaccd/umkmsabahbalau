@@ -10,13 +10,11 @@ const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerSto
 
 const app = express();
 
-// --- PENTING: Penanganan CORS agar frontend bisa akses backend ---
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // --- KONEKSI DATABASE ---
-// Pastikan koneksi hanya dibuat jika belum terkoneksi (Best Practice Serverless)
 if (mongoose.connection.readyState === 0) {
     mongoose.connect(process.env.MONGO_URI)
         .then(() => console.log('Sukses terkoneksi ke MongoDB'))
@@ -38,9 +36,7 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// --- PERBAIKAN UTAMA: CEK MODEL SEBELUM DIBUAT ---
-// Gunakan (mongoose.models.NamaModel || mongoose.model(...))
-
+// --- DEFINISI MODEL (Mencegah Overwrite) ---
 const UmkmSchema = new mongoose.Schema({
     id: { type: String, default: () => Date.now().toString() },
     name: String,
@@ -51,14 +47,12 @@ const UmkmSchema = new mongoose.Schema({
     mapSrcUrl: String,
     image: String
 });
-// Perbaikan di sini:
 const Umkm = mongoose.models.Umkm || mongoose.model('Umkm', UmkmSchema);
 
 const AdminSchema = new mongoose.Schema({
     username: { type: String, required: true },
     password: { type: String, required: true }
 });
-// Perbaikan di sini:
 const Admin = mongoose.models.Admin || mongoose.model('Admin', AdminSchema);
 
 const StatSchema = new mongoose.Schema({
@@ -66,11 +60,9 @@ const StatSchema = new mongoose.Schema({
     visits: { type: Number, default: 0 },
     waClicks: { type: Map, of: Number, default: {} }
 });
-// Perbaikan di sini:
 const Stat = mongoose.models.Stat || mongoose.model('Stat', StatSchema);
 
-// --- KONFIGURASI STATIC FILES ---
-// Mundur satu folder (..) untuk mencari folder public
+// --- STATIC FILES ---
 app.use(express.static(path.join(__dirname, '../public')));
 
 // --- ENDPOINTS ---
@@ -86,19 +78,16 @@ app.get('/setup-admin', async (req, res) => {
             res.send('<h1>Admin Sudah Ada</h1><p>Silakan login dengan username: <b>admin</b></p><br><a href="/">Kembali ke Home</a>');
         }
     } catch (error) {
-        console.error(error);
-        res.status(500).send('Error database: ' + error.message);
+        res.status(500).send('Error: ' + error.message);
     }
 });
 
-// 2. Data UMKM
+// 2. UMKM Routes
 app.get('/umkms', async (req, res) => {
     try {
         const umkms = await Umkm.find();
         res.json(umkms);
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
+    } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
 app.post('/umkms', upload.single('imageFile'), async (req, res) => {
@@ -117,15 +106,13 @@ app.post('/umkms', upload.single('imageFile'), async (req, res) => {
         });
         await newUMKM.save();
         res.status(201).json(newUMKM);
-    } catch (error) {
-        res.status(500).json({ message: "Gagal menyimpan data" });
-    }
+    } catch (error) { res.status(500).json({ message: "Gagal menyimpan" }); }
 });
 
 app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
     try {
         const oldData = await Umkm.findOne({ id: req.params.id });
-        if (!oldData) return res.status(404).json({ success: false, message: 'UMKM tidak ditemukan.' });
+        if (!oldData) return res.status(404).json({ message: 'Not found' });
 
         let finalImage = oldData.image; 
         if (req.file && req.file.path) finalImage = req.file.path;
@@ -141,18 +128,14 @@ app.put('/umkms/:id', upload.single('imageFile'), async (req, res) => {
 
         await oldData.save();
         res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ message: "Gagal update data" });
-    }
+    } catch (error) { res.status(500).json({ message: "Gagal update" }); }
 });
 
 app.delete('/umkms/:id', async (req, res) => {
     try {
         await Umkm.deleteOne({ id: req.params.id });
         res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ message: "Gagal menghapus" });
-    }
+    } catch (error) { res.status(500).json({ message: "Gagal hapus" }); }
 });
 
 // 3. Login
@@ -162,9 +145,7 @@ app.post('/login', async (req, res) => {
         const admin = await Admin.findOne({ username, password });
         if (admin) res.json({ success: true, message: 'Login berhasil!' });
         else res.status(401).json({ success: false, message: 'Salah username/password' });
-    } catch (error) {
-        res.status(500).json({ message: 'Error server' });
-    }
+    } catch (error) { res.status(500).json({ message: 'Error server' }); }
 });
 
 // 4. Stats
@@ -175,7 +156,6 @@ app.get('/stats', async (req, res) => {
         res.json(stats);
     } catch (e) { res.json({ visits: 0 }); }
 });
-
 app.post('/stats/visit', async (req, res) => {
     try {
         let stats = await Stat.findOne({ name: 'main_stats' });
@@ -185,7 +165,6 @@ app.post('/stats/visit', async (req, res) => {
         res.json({ success: true });
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
-
 app.post('/stats/wa-click/:id', async (req, res) => {
     try {
         let stats = await Stat.findOne({ name: 'main_stats' });
@@ -197,8 +176,9 @@ app.post('/stats/wa-click/:id', async (req, res) => {
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
-// 5. Route Utama (WAJIB PALING BAWAH)
-app.get('*', (req, res) => {
+// --- PERBAIKAN DI SINI (Express 5 Route) ---
+// Ganti '*' menjadi /(.*)/ agar valid di Express 5
+app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
