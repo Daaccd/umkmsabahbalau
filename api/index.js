@@ -5,7 +5,12 @@ const path = require('path');
 const multer = require('multer');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
+
+// --- PERBAIKAN DI SINI (JURUS IMPORT AMAN) ---
+// Kita ambil library-nya dulu
+const multerStorageCloudinary = require('multer-storage-cloudinary');
+// Lalu kita cek: apakah dia ada di dalam properti .CloudinaryStorage atau langsung?
+const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
 
 const app = express();
 
@@ -13,7 +18,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// --- 1. KONEKSI DATABASE (LEBIH STABIL) ---
+// --- 1. KONEKSI DATABASE ---
 const connectDB = async () => {
     if (mongoose.connection.readyState >= 1) return;
     try {
@@ -24,7 +29,6 @@ const connectDB = async () => {
     }
 };
 
-// Middleware: Pastikan DB connect di setiap request
 app.use(async (req, res, next) => {
     await connectDB();
     next();
@@ -32,7 +36,7 @@ app.use(async (req, res, next) => {
 
 // --- 2. CONFIG CLOUDINARY ---
 if (!process.env.CLOUDINARY_CLOUD_NAME) {
-    console.error("WARNING: Config Cloudinary Kosong/Salah!");
+    console.error("WARNING: Config Cloudinary Kosong!");
 }
 
 cloudinary.config({
@@ -41,6 +45,7 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Setup Storage dengan Import yang Sudah Diperbaiki
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -76,12 +81,12 @@ const Stat = mongoose.models.Stat || mongoose.model('Stat', new mongoose.Schema(
 // --- 4. STATIC FILES ---
 app.use(express.static(path.join(__dirname, '../public')));
 
-// --- 5. UPLOAD HANDLER (Error Checker) ---
+// --- 5. UPLOAD HANDLER ---
 const uploadHandler = (req, res, next) => {
     upload.single('imageFile')(req, res, (err) => {
         if (err) {
             console.error("UPLOAD ERROR:", err);
-            return res.status(500).json({ message: "Gagal Upload (Cek Env Vercel)", error: err.message });
+            return res.status(500).json({ message: "Gagal Upload", error: err.message });
         }
         next();
     });
@@ -89,7 +94,7 @@ const uploadHandler = (req, res, next) => {
 
 // --- 6. ENDPOINTS ---
 
-// Setup Admin (Akses ini jika tidak bisa login)
+// Setup Admin
 app.get('/setup-admin', async (req, res) => {
     try {
         const exist = await Admin.findOne({ username: 'admin' });
@@ -102,21 +107,15 @@ app.get('/setup-admin', async (req, res) => {
     } catch (e) { res.status(500).send(e.message); }
 });
 
-// LOGIN (DENGAN PENGAMAN)
+// Login
 app.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        console.log("Login attempt:", username); // Cek di Logs Vercel
-
         const admin = await Admin.findOne({ username, password });
-        if (admin) {
-            res.json({ success: true });
-        } else {
-            res.status(401).json({ success: false, message: 'Username/Password Salah' });
-        }
+        if (admin) res.json({ success: true });
+        else res.status(401).json({ success: false, message: 'Salah username/password' });
     } catch (error) {
-        console.error("LOGIN ERROR:", error);
-        res.status(500).json({ success: false, message: 'Server Error: ' + error.message });
+        res.status(500).json({ success: false, message: error.message });
     }
 });
 
@@ -199,7 +198,7 @@ app.post('/stats/wa-click/:id', async (req, res) => {
     } catch (e) { res.json({}); }
 });
 
-// Route Utama
+// Route Utama (Express 5 Support)
 app.get(/(.*)/, (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
