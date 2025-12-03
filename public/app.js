@@ -1,4 +1,5 @@
-const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000' : '';
+// Kosongkan URL agar otomatis menyesuaikan dengan domain Vercel
+const API_URL = '';
 let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
 let globalUMKMs = [];
 
